@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card, Input, OptionPill, Screen } from '@/shared/components';
+import { MedicationSearchInput } from '@/features/medications/components/MedicationSearchInput';
 import { MedicationWheel } from '@/features/daily-record/components/MedicationWheel';
 import { useMedicationsStore } from '@/features/medications/store/medications.store';
 import { Colors } from '@/shared/theme/colors';
 import { Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
-import type { MedicationType } from '@/shared/types/domain';
+import type { MedicationCatalogItem, MedicationType } from '@/shared/types/domain';
 
 const types: { id: MedicationType; label: string }[] = [
   { id: 'analgesic', label: 'Analgésico' },
@@ -26,6 +27,8 @@ export const MedicationsScreen: React.FC = () => {
 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
+  const [substance, setSubstance] = useState('');
+  const [clinicalUse, setClinicalUse] = useState('');
   const [dose, setDose] = useState('');
   const [frequency, setFrequency] = useState('8');
   const [type, setType] = useState<MedicationType>('analgesic');
@@ -34,6 +37,24 @@ export const MedicationsScreen: React.FC = () => {
     if (!hydrated) hydrate();
   }, [hydrate, hydrated]);
 
+  const resetForm = () => {
+    setName('');
+    setSubstance('');
+    setClinicalUse('');
+    setDose('');
+    setFrequency('8');
+    setType('analgesic');
+  };
+
+  const handlePickCatalog = (item: MedicationCatalogItem) => {
+    setName(item.name);
+    setSubstance(item.substance);
+    setClinicalUse(item.clinicalUse);
+    setDose(item.standardDose);
+    setFrequency(String(item.defaultFrequency));
+    setType(item.type);
+  };
+
   const handleAdd = async () => {
     if (!name.trim() || !dose.trim()) return;
     await add({
@@ -41,16 +62,16 @@ export const MedicationsScreen: React.FC = () => {
       dose: dose.trim(),
       type,
       frequency: parseInt(frequency || '8', 10),
+      substance: substance.trim() || undefined,
+      clinicalUse: clinicalUse.trim() || undefined,
+      takenHistory: [],
     });
-    setName('');
-    setDose('');
-    setFrequency('8');
-    setType('analgesic');
+    resetForm();
     setOpen(false);
   };
 
   return (
-    <Screen scroll>
+    <Screen scroll edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Mis Medicamentos</Text>
@@ -66,11 +87,29 @@ export const MedicationsScreen: React.FC = () => {
       <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <Text style={styles.modalTitle}>Nuevo medicamento</Text>
 
-              <Input label="Nombre" value={name} onChangeText={setName} placeholder="Ej. Paracetamol" />
-              <Input label="Dosis" value={dose} onChangeText={setDose} placeholder="Ej. 500mg" />
+              <MedicationSearchInput
+                value={name}
+                onChangeText={setName}
+                onSelect={handlePickCatalog}
+                placeholder="Ej. Paracetamol o Ibuprofeno"
+              />
+
+              <Input
+                label="Sustancia activa (opcional)"
+                value={substance}
+                onChangeText={setSubstance}
+                placeholder="Ej. Paracetamol"
+              />
+              <Input
+                label="Uso clínico (opcional)"
+                value={clinicalUse}
+                onChangeText={setClinicalUse}
+                placeholder="Ej. Analgésico no opioide"
+              />
+              <Input label="Dosis" value={dose} onChangeText={setDose} placeholder="Ej. 500 mg" />
               <Input
                 label="Cada cuántas horas"
                 value={frequency}
@@ -93,7 +132,14 @@ export const MedicationsScreen: React.FC = () => {
 
               <View style={styles.modalActions}>
                 <View style={{ flex: 1 }}>
-                  <Button label="Cancelar" variant="outline" onPress={() => setOpen(false)} />
+                  <Button
+                    label="Cancelar"
+                    variant="outline"
+                    onPress={() => {
+                      resetForm();
+                      setOpen(false);
+                    }}
+                  />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Button label="Guardar" onPress={handleAdd} />

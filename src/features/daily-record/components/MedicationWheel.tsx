@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { differenceInHours, differenceInMinutes } from 'date-fns';
+import { differenceInHours, differenceInMinutes, formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Colors } from '@/shared/theme/colors';
 import { Radius, Spacing, Shadow } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
@@ -29,13 +30,28 @@ const typeLabels: Record<MedicationType, string> = {
   other: 'Otro',
 };
 
-const computeNextDose = (med: Medication) => {
+interface DoseTime {
+  overdue: boolean;
+  hoursLate: number;
+  hours: number;
+  minutes: number;
+}
+
+const computeNextDose = (med: Medication): DoseTime | null => {
   if (!med.nextDose) return null;
   const now = new Date();
   const next = new Date(med.nextDose);
-  if (next <= now) return { overdue: true, hours: 0, minutes: 0 };
+  if (next <= now) {
+    return {
+      overdue: true,
+      hoursLate: differenceInHours(now, next),
+      hours: 0,
+      minutes: 0,
+    };
+  }
   return {
     overdue: false,
+    hoursLate: 0,
     hours: differenceInHours(next, now),
     minutes: differenceInMinutes(next, now) % 60,
   };
@@ -82,6 +98,7 @@ export const MedicationWheel: React.FC<MedicationWheelProps> = ({
               </View>
               {meds.map((med) => {
                 const time = computeNextDose(med);
+                const showAlert = time?.overdue && time.hoursLate >= 2;
                 return (
                   <LinearGradient
                     key={med.id}
@@ -97,9 +114,35 @@ export const MedicationWheel: React.FC<MedicationWheelProps> = ({
                     >
                       <Ionicons name="close" size={18} color={Colors.text.white} />
                     </Pressable>
+
+                    {showAlert ? (
+                      <View style={styles.alertBadge}>
+                        <Ionicons name="warning" size={12} color="#fff" />
+                        <Text style={styles.alertText}>
+                          Vencida hace {time!.hoursLate}h
+                        </Text>
+                      </View>
+                    ) : null}
+
                     <Text style={styles.medName}>{med.name}</Text>
+                    {med.substance && med.substance !== med.name ? (
+                      <Text style={styles.medSubstance}>{med.substance}</Text>
+                    ) : null}
+                    {med.clinicalUse ? (
+                      <Text style={styles.medClinical}>{med.clinicalUse}</Text>
+                    ) : null}
                     <Text style={styles.medMeta}>Dosis: {med.dose}</Text>
                     <Text style={styles.medMetaSm}>Cada {med.frequency} horas</Text>
+
+                    {med.lastTaken ? (
+                      <Text style={styles.lastTakenText}>
+                        Última toma:{' '}
+                        {formatDistanceToNow(new Date(med.lastTaken), {
+                          addSuffix: true,
+                          locale: es,
+                        })}
+                      </Text>
+                    ) : null}
 
                     {time ? (
                       <View
@@ -167,13 +210,43 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: 'rgba(0,0,0,0.18)',
   },
+  alertBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    marginBottom: 6,
+  },
+  alertText: { color: '#fff', fontWeight: '700', fontSize: 11 },
   medName: {
     color: Colors.text.white,
     fontSize: Typography.fontSize.lg,
     fontWeight: '700',
   },
+  medSubstance: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 12,
+    fontStyle: 'italic',
+    marginTop: 1,
+  },
+  medClinical: {
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 4,
+  },
   medMeta: { color: 'rgba(255,255,255,0.95)', fontSize: 14, marginTop: 2 },
   medMetaSm: { color: 'rgba(255,255,255,0.8)', fontSize: 12 },
+  lastTakenText: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 11,
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
   timeBox: {
     marginTop: Spacing.sm,
     padding: Spacing.sm,

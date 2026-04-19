@@ -61,14 +61,14 @@ export const HistoryScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Screen>
+      <Screen edges={['top', 'left', 'right']}>
         <ActivityIndicator size="large" color={Colors.medical.blue} />
       </Screen>
     );
   }
 
   return (
-    <Screen scroll>
+    <Screen scroll edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <Text style={styles.title}>Historial</Text>
         <Text style={styles.subtitle}>{filtered.length} registros</Text>
@@ -117,8 +117,8 @@ export const HistoryScreen: React.FC = () => {
       {filtered.length === 0 ? (
         <Card>
           <EmptyState
-            title="Aún no tienes registros"
-            description="Completa tu primer registro diario para verlo aquí."
+            title="Tu historia comienza aquí"
+            description="Cada registro es un paso para conocer mejor tu dolor. Cuando completes el primero, lo verás reflejado en este espacio."
           />
         </Card>
       ) : (

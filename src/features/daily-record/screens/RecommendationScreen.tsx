@@ -65,10 +65,12 @@ export const RecommendationScreen: React.FC = () => {
     <WizardLayout
       step={8}
       totalSteps={9}
-      title="Recomendación"
-      subtitle="Según tu registro, te sugerimos:"
+      stepLabel="Tu recomendación"
+      title="Lo que te sugerimos"
+      subtitle="Según tu registro de hoy"
       onBack={() => navigation.goBack()}
       onNext={() => navigation.navigate('Save')}
+      nextLabel="Revisar y guardar"
     >
       {loading || !data.recommendation ? (
         <View style={styles.loading}>

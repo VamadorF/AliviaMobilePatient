@@ -6,6 +6,11 @@ import React, {
   useReducer,
 } from 'react';
 
+export interface TakenMedication {
+  id: string;
+  relief: number;
+}
+
 export interface DailyRecordData {
   primaryPainArea: string;
   secondaryPainAreas: string[];
@@ -20,13 +25,17 @@ export interface DailyRecordData {
   functionalImpactPhysical: number;
   functionalImpactWork: number;
   functionalImpactSocial: number;
+  functionalImpactSleep: number;
   phq2Answer1: number | null;
   phq2Answer2: number | null;
   gad2Answer1: number | null;
   gad2Answer2: number | null;
   tookMedication: boolean | null;
+  /** @deprecated retained for backwards compatibility with old persisted records */
   medicationId: string | null;
+  /** @deprecated retained for backwards compatibility with old persisted records */
   medicationRelief: number | null;
+  takenMedications: TakenMedication[];
   recommendation: {
     category: 'autocuidado' | 'cesfam-ccr' | 'sapu-sar' | 'urgencia';
     message: string;
@@ -47,6 +56,7 @@ const initialData: DailyRecordData = {
   functionalImpactPhysical: 0,
   functionalImpactWork: 0,
   functionalImpactSocial: 0,
+  functionalImpactSleep: 0,
   phq2Answer1: null,
   phq2Answer2: null,
   gad2Answer1: null,
@@ -54,6 +64,7 @@ const initialData: DailyRecordData = {
   tookMedication: null,
   medicationId: null,
   medicationRelief: null,
+  takenMedications: [],
   recommendation: null,
 };
 

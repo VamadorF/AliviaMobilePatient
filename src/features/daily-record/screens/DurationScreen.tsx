@@ -25,10 +25,12 @@ export const DurationScreen: React.FC = () => {
     <WizardLayout
       step={4}
       totalSteps={9}
+      stepLabel="Hace cuánto"
       title="¿Hace cuánto tiempo lo sientes?"
       onBack={() => navigation.goBack()}
       onNext={() => navigation.navigate('FunctionalImpact')}
       nextDisabled={data.durationValue <= 0}
+      nextLabel="Continuar"
     >
       <Text style={styles.label}>Cantidad</Text>
       <Input

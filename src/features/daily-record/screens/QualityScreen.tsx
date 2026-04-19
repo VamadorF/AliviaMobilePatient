@@ -9,7 +9,7 @@ import { Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
 import type { DailyRecordStackParamList } from '@/shared/types/navigation';
 
-const qualities = [
+const sensationOptions = [
   { id: 'stabbing', label: 'Punzante' },
   { id: 'burning', label: 'Ardor' },
   { id: 'throbbing', label: 'Pulsátil' },
@@ -18,6 +18,16 @@ const qualities = [
   { id: 'cramping', label: 'Calambre' },
   { id: 'pressing', label: 'Opresivo' },
   { id: 'tingling', label: 'Hormigueo' },
+  { id: 'deep', label: 'Profundo' },
+  { id: 'superficial', label: 'Superficial' },
+];
+
+const patternOptions = [
+  { id: 'continuous', label: 'Continuo' },
+  { id: 'intermittent', label: 'Intermitente' },
+  { id: 'radiating', label: 'Irradia' },
+  { id: 'worse-movement', label: 'Empeora con el movimiento' },
+  { id: 'worse-rest', label: 'Empeora en reposo' },
 ];
 
 export const QualityScreen: React.FC = () => {
@@ -38,14 +48,18 @@ export const QualityScreen: React.FC = () => {
     <WizardLayout
       step={3}
       totalSteps={9}
+      stepLabel="Cómo se siente"
       title="¿Cómo es el dolor?"
-      subtitle="Selecciona todas las cualidades que apliquen"
+      subtitle="Marca cómo se siente y cómo se comporta a lo largo del día"
       onBack={() => navigation.goBack()}
       onNext={() => navigation.navigate('Duration')}
       nextDisabled={data.painQualities.length === 0}
+      nextLabel="Continuar a duración"
     >
+      <Text style={styles.section}>Tipo de sensación</Text>
+      <Text style={styles.help}>Elige una o varias palabras que describan cómo se siente</Text>
       <View style={styles.grid}>
-        {qualities.map((q) => (
+        {sensationOptions.map((q) => (
           <OptionPill
             key={q.id}
             label={q.label}
@@ -55,9 +69,22 @@ export const QualityScreen: React.FC = () => {
         ))}
       </View>
 
-      <Text style={styles.helper}>Otra (opcional)</Text>
+      <Text style={styles.section}>Patrón temporal y funcional</Text>
+      <Text style={styles.help}>¿Cómo cambia el dolor con el paso del tiempo o las actividades?</Text>
+      <View style={styles.grid}>
+        {patternOptions.map((q) => (
+          <OptionPill
+            key={q.id}
+            label={q.label}
+            selected={data.painQualities.includes(q.id)}
+            onPress={() => toggle(q.id)}
+          />
+        ))}
+      </View>
+
+      <Text style={styles.section}>Otra (opcional)</Text>
       <Input
-        placeholder="Describe cómo se siente"
+        placeholder="Describe cómo se siente con tus palabras"
         value={data.painQualityOther}
         onChangeText={(text) => updateData({ painQualityOther: text })}
       />
@@ -66,15 +93,21 @@ export const QualityScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  section: {
+    ...Typography.styles.h4,
+    color: Colors.text.primary,
+    marginTop: Spacing.base,
+    marginBottom: Spacing.xs,
+  },
+  help: {
+    color: Colors.text.muted,
+    fontSize: 12,
+    marginBottom: Spacing.sm,
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: Spacing.base,
-  },
-  helper: {
-    ...Typography.styles.label,
-    color: Colors.text.primary,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
 });
 
