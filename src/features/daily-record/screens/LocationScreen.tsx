@@ -16,11 +16,6 @@ export const LocationScreen: React.FC = () => {
   const { data, updateData } = useDailyRecordData();
   const [view, setView] = useState<BodyViewMode>('frontal');
 
-  const selected = [
-    ...(data.primaryPainArea ? [data.primaryPainArea] : []),
-    ...data.secondaryPainAreas,
-  ];
-
   const onArea = (area: string) => {
     if (data.primaryPainArea === area) {
       updateData({ primaryPainArea: '' });
@@ -43,10 +38,12 @@ export const LocationScreen: React.FC = () => {
     <WizardLayout
       step={1}
       totalSteps={9}
+      stepLabel="Dónde te duele"
       title="¿Dónde sientes el dolor?"
-      subtitle="Toca las áreas del cuerpo donde sientes dolor"
+      subtitle="Toca primero la zona principal y luego otras zonas si las hay"
       onNext={() => navigation.navigate('Intensity')}
       nextDisabled={!data.primaryPainArea}
+      nextLabel="Continuar"
     >
       <View style={styles.toggleRow}>
         {(['frontal', 'posterior'] as BodyViewMode[]).map((mode) => (
@@ -64,7 +61,12 @@ export const LocationScreen: React.FC = () => {
         ))}
       </View>
 
-      <BodyMap selectedAreas={selected} onAreaClick={onArea} viewMode={view} />
+      <BodyMap
+        primaryArea={data.primaryPainArea}
+        secondaryAreas={data.secondaryPainAreas}
+        onAreaClick={onArea}
+        viewMode={view}
+      />
 
       <View style={styles.usualBox}>
         <Text style={styles.usualLabel}>¿Es el lugar habitual?</Text>

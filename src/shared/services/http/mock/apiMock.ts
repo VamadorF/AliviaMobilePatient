@@ -5,6 +5,7 @@ import {
   mockDashboard,
   mockHealthPro,
   mockIndications,
+  mockMedicationsCatalog,
   mockUser,
 } from './mockData';
 
@@ -57,6 +58,8 @@ export const apiMock = {
       const record = {
         id: `record-${Date.now()}`,
         ...data,
+        functionalImpactSleep: data?.functionalImpactSleep ?? 0,
+        takenMedications: data?.takenMedications ?? [],
         date: new Date().toISOString(),
         createdAt: new Date().toISOString(),
       };
@@ -148,6 +151,20 @@ export const apiMock = {
 
     if (url.includes('/community')) {
       return { data: mockCommunities };
+    }
+
+    if (url.includes('/medications/search')) {
+      const queryString = url.split('?')[1] ?? '';
+      const params = new URLSearchParams(queryString);
+      const q = (params.get('q') ?? '').toLowerCase().trim();
+      if (!q) return { data: mockMedicationsCatalog };
+      return {
+        data: mockMedicationsCatalog.filter(
+          (m) =>
+            m.name.toLowerCase().includes(q) ||
+            m.substance.toLowerCase().includes(q),
+        ),
+      };
     }
 
     return { data: [] };

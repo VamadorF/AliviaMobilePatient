@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Screen } from './Screen';
 import { ProgressBar } from './ProgressBar';
 import { Button } from './Button';
@@ -13,6 +14,7 @@ interface WizardLayoutProps {
   subtitle?: string;
   step: number;
   totalSteps: number;
+  stepLabel?: string;
   children: ReactNode;
   onBack?: () => void;
   onNext?: () => void;
@@ -29,6 +31,7 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
   subtitle,
   step,
   totalSteps,
+  stepLabel,
   children,
   onBack,
   onNext,
@@ -39,8 +42,10 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
   hideNext = false,
   onClose,
 }) => {
+  const insets = useSafeAreaInsets();
+
   return (
-    <Screen scroll padded background={Colors.background.light}>
+    <Screen scroll padded background={Colors.background.light} edges={['top', 'left', 'right']}>
       <View style={styles.headerRow}>
         <Pressable
           onPress={onBack}
@@ -52,7 +57,7 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
         </Pressable>
         <View style={styles.stepBadge}>
           <Text style={styles.stepText}>
-            Paso {step} de {totalSteps}
+            {stepLabel ?? `Paso ${step} de ${totalSteps}`}
           </Text>
         </View>
         <Pressable
@@ -65,7 +70,12 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
         </Pressable>
       </View>
 
-      <ProgressBar progress={step / totalSteps} color={Colors.medical.blue} />
+      <View style={styles.progressRow}>
+        <ProgressBar progress={step / totalSteps} color={Colors.medical.blue} />
+        <Text style={styles.progressNumber}>
+          {step} / {totalSteps}
+        </Text>
+      </View>
 
       <View style={styles.titleBlock}>
         <Text style={styles.title}>{title}</Text>
@@ -74,7 +84,7 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
 
       <View style={styles.content}>{children}</View>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
         {onBack ? (
           <View style={styles.btnHalf}>
             <Button
@@ -127,6 +137,14 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.xs,
     fontWeight: '700',
   },
+  progressRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  progressNumber: {
+    color: Colors.text.muted,
+    fontSize: Typography.fontSize.xs,
+    fontWeight: '700',
+    minWidth: 36,
+    textAlign: 'right',
+  },
   titleBlock: { marginVertical: Spacing.lg },
   title: { ...Typography.styles.h2, color: Colors.text.primary },
   subtitle: { ...Typography.styles.body, color: Colors.text.muted, marginTop: 4 },
@@ -135,7 +153,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.sm,
     marginTop: Spacing.base,
-    marginBottom: Spacing.lg,
   },
   btnHalf: { flex: 1 },
   btnFull: { flex: 1 },

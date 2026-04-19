@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { DashboardScreen } from '@/features/dashboard/screens/DashboardScreen';
 import { MedicationsScreen } from '@/features/medications/screens/MedicationsScreen';
@@ -20,6 +21,10 @@ const iconForRoute: Record<keyof MainTabsParamList, IconName> = {
 };
 
 export const MainTabs: React.FC = () => {
+  const insets = useSafeAreaInsets();
+  const tabBarBaseHeight = 64;
+  const tabBarBasePaddingBottom = 8;
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -29,8 +34,8 @@ export const MainTabs: React.FC = () => {
         tabBarStyle: {
           backgroundColor: Colors.background.white,
           borderTopColor: Colors.border.light,
-          height: 64,
-          paddingBottom: 8,
+          height: tabBarBaseHeight + insets.bottom,
+          paddingBottom: tabBarBasePaddingBottom + insets.bottom,
           paddingTop: 6,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },

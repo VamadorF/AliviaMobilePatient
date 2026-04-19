@@ -14,6 +14,15 @@ import { Typography } from '@/shared/theme/typography';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
+const getGreeting = (date: Date, name?: string): string => {
+  const hour = date.getHours();
+  const who = name ?? 'paciente';
+  if (hour < 6) return `Buenas noches, ${who}`;
+  if (hour < 13) return `Buenos días, ${who}`;
+  if (hour < 20) return `Buenas tardes, ${who}`;
+  return `Buenas noches, ${who}`;
+};
+
 const StatCard: React.FC<{
   icon: IconName;
   label: string;
@@ -42,7 +51,7 @@ export const DashboardScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Screen>
+      <Screen edges={['top', 'left', 'right']}>
         <ActivityIndicator size="large" color={Colors.medical.blue} />
       </Screen>
     );
@@ -52,10 +61,10 @@ export const DashboardScreen: React.FC = () => {
   const chartData = data?.chartData ?? [];
 
   return (
-    <Screen scroll>
+    <Screen scroll edges={['top', 'left', 'right']}>
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.greeting}>Hola, {user?.firstName ?? 'paciente'}</Text>
+          <Text style={styles.greeting}>{getGreeting(new Date(), user?.firstName)}</Text>
           <Text style={styles.subtitle}>¿Cómo te sientes hoy?</Text>
         </View>
         <Pressable onPress={logout} hitSlop={12} style={styles.logoutBtn}>

@@ -21,6 +21,11 @@ export interface DashboardData {
   communities: { id: string; name: string; pathology: string }[];
 }
 
+export interface TakenMedicationEntry {
+  id: string;
+  relief: number;
+}
+
 export interface DailyRecord {
   id: string;
   date: string;
@@ -39,6 +44,11 @@ export interface DailyRecord {
   phq2Answer2?: number | null;
   gad2Answer1?: number | null;
   gad2Answer2?: number | null;
+  functionalImpactPhysical?: number;
+  functionalImpactWork?: number;
+  functionalImpactSocial?: number;
+  functionalImpactSleep?: number;
+  takenMedications?: TakenMedicationEntry[];
 }
 
 export type MedicationType = 'analgesic' | 'antiinflammatory' | 'muscle-relaxant' | 'other';
@@ -51,6 +61,19 @@ export interface Medication {
   frequency: number;
   lastTaken?: string;
   nextDose?: string;
+  substance?: string;
+  clinicalUse?: string;
+  takenHistory?: string[];
+}
+
+export interface MedicationCatalogItem {
+  id: string;
+  name: string;
+  substance: string;
+  defaultFrequency: number;
+  type: MedicationType;
+  standardDose: string;
+  clinicalUse: string;
 }
 
 export interface Recommendation {

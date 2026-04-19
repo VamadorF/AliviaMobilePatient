@@ -34,6 +34,7 @@ export const useMedicationsStore = create<MedicationsState>((set, get) => ({
     const med: Medication = {
       id: `med-${Date.now()}`,
       ...input,
+      takenHistory: input.takenHistory ?? [],
       nextDose: input.nextDose ?? computeNext(input.frequency),
     };
     const next = [med, ...get().medications];
@@ -49,9 +50,16 @@ export const useMedicationsStore = create<MedicationsState>((set, get) => ({
 
   async take(id) {
     const now = new Date().toISOString();
-    const next = get().medications.map((m) =>
-      m.id === id ? { ...m, lastTaken: now, nextDose: computeNext(m.frequency) } : m,
-    );
+    const next = get().medications.map((m) => {
+      if (m.id !== id) return m;
+      const history = m.takenHistory ?? [];
+      return {
+        ...m,
+        lastTaken: now,
+        nextDose: computeNext(m.frequency),
+        takenHistory: [now, ...history].slice(0, 50),
+      };
+    });
     set({ medications: next });
     await persist(next);
   },

@@ -55,10 +55,12 @@ export const FunctionalImpactScreen: React.FC = () => {
     <WizardLayout
       step={5}
       totalSteps={9}
+      stepLabel="Impacto en tu día"
       title="Impacto funcional"
       subtitle="¿Cuánto te limita el dolor en cada área?"
       onBack={() => navigation.goBack()}
       onNext={() => navigation.navigate('EmotionalState')}
+      nextLabel="Continuar al ánimo"
     >
       <SliderRow
         label="Actividad física"
@@ -74,6 +76,11 @@ export const FunctionalImpactScreen: React.FC = () => {
         label="Vida social"
         value={data.functionalImpactSocial}
         onChange={(v) => updateData({ functionalImpactSocial: v })}
+      />
+      <SliderRow
+        label="Sueño · ¿Cuánto afecta el dolor tu descanso nocturno?"
+        value={data.functionalImpactSleep}
+        onChange={(v) => updateData({ functionalImpactSleep: v })}
       />
     </WizardLayout>
   );

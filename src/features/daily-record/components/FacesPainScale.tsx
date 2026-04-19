@@ -15,71 +15,47 @@ interface FacesPainScaleProps {
 
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
-const faces: {
+interface FaceDef {
   value: number;
   label: string;
-  description: string;
   color: string;
   icon: IconName;
-}[] = [
-  {
-    value: 0,
-    label: 'Sin dolor',
-    description: 'Sin dolor',
-    color: '#87CEEB',
-    icon: 'sentiment-very-satisfied',
-  },
-  {
-    value: 2,
-    label: 'Dolor leve',
-    description: 'Duele un poco',
-    color: '#90EE90',
-    icon: 'sentiment-satisfied',
-  },
-  {
-    value: 4,
-    label: 'Dolor moderado',
-    description: 'Duele un poco más',
-    color: '#FFD700',
-    icon: 'sentiment-neutral',
-  },
-  {
-    value: 6,
-    label: 'Dolor severo',
-    description: 'Duele aún más',
-    color: '#FF8C00',
-    icon: 'sentiment-dissatisfied',
-  },
-  {
-    value: 8,
-    label: 'Dolor muy severo',
-    description: 'Duele mucho',
-    color: '#FF6347',
-    icon: 'sentiment-very-dissatisfied',
-  },
-  {
-    value: 10,
-    label: 'Peor dolor',
-    description: 'Duele lo peor',
-    color: '#DC143C',
-    icon: 'sick',
-  },
+}
+
+const faces: FaceDef[] = [
+  { value: 0, label: 'Sin dolor', color: '#3b82f6', icon: 'sentiment-very-satisfied' },
+  { value: 2, label: 'Apenas duele', color: '#22c55e', icon: 'sentiment-satisfied' },
+  { value: 4, label: 'Duele un poco más', color: '#facc15', icon: 'sentiment-neutral' },
+  { value: 6, label: 'Duele bastante', color: '#fb923c', icon: 'sentiment-dissatisfied' },
+  { value: 8, label: 'Duele mucho', color: '#f97316', icon: 'sentiment-very-dissatisfied' },
+  { value: 10, label: 'Peor dolor imaginable', color: '#dc2626', icon: 'sick' },
 ];
 
-const getClosestFace = (val: number) =>
+interface IaspBand {
+  range: [number, number];
+  label: string;
+  color: string;
+  description: string;
+}
+
+const iaspBands: IaspBand[] = [
+  { range: [0, 0], label: 'Sin dolor', color: '#3b82f6', description: 'No hay dolor presente' },
+  { range: [1, 3], label: 'Dolor leve', color: '#22c55e', description: 'Es molesto, pero puedes continuar tu día' },
+  { range: [4, 6], label: 'Dolor moderado', color: '#f59e0b', description: 'Interfiere con tus actividades habituales' },
+  { range: [7, 9], label: 'Dolor severo', color: '#ef4444', description: 'Limita seriamente lo que puedes hacer' },
+  { range: [10, 10], label: 'El peor dolor imaginable', color: '#7f1d1d', description: 'No puedes pensar en otra cosa' },
+];
+
+const getIaspBand = (val: number): IaspBand => {
+  return iaspBands.find((b) => val >= b.range[0] && val <= b.range[1]) ?? iaspBands[0];
+};
+
+const getClosestFace = (val: number): FaceDef =>
   faces.reduce((prev, curr) =>
     Math.abs(curr.value - val) < Math.abs(prev.value - val) ? curr : prev,
   );
 
-const getScaleColor = (num: number): string => {
-  const normalized = Math.max(1, Math.min(10, num));
-  const t = (normalized - 1) / 9;
-  if (t <= 0.2) return '#87CEEB';
-  if (t <= 0.4) return '#90EE90';
-  if (t <= 0.6) return '#FFD700';
-  if (t <= 0.8) return '#FF8C00';
-  return '#DC143C';
-};
+const clampInt = (n: number) => Math.max(0, Math.min(10, Math.round(n)));
 
 export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
   value,
@@ -87,23 +63,61 @@ export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
   size = 'md',
   readOnly = false,
 }) => {
-  const normalized = Math.max(1, Math.min(10, value || 1));
-  const closest = getClosestFace(normalized);
+  const intensity = clampInt(value);
+  const closest = getClosestFace(intensity);
+  const band = getIaspBand(intensity);
+  const faceSize = size === 'lg' ? 56 : size === 'md' ? 48 : 40;
 
-  const faceSize = size === 'lg' ? 60 : size === 'md' ? 52 : 44;
-
-  const handleSelect = (faceValue: number) => {
+  const handleSelectFace = (faceValue: number) => {
     if (readOnly || !onChange) return;
-    onChange(faceValue === 0 ? 1 : faceValue);
+    onChange(faceValue);
   };
 
-  const stepDown = () => onChange?.(Math.max(1, +(normalized - 1).toFixed(1)));
-  const stepUp = () => onChange?.(Math.min(10, +(normalized + 1).toFixed(1)));
+  const handleSelectNrs = (n: number) => {
+    if (readOnly || !onChange) return;
+    onChange(n);
+  };
 
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.title}>Escala de medición del dolor</Text>
+      <Text style={styles.title}>Escala numérica del dolor (NRS-11)</Text>
+      <Text style={styles.subtitle}>Toca el número que mejor representa tu dolor de 0 a 10</Text>
 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.nrsRow}
+      >
+        {Array.from({ length: 11 }, (_, i) => i).map((n) => {
+          const selected = intensity === n;
+          const cellBand = getIaspBand(n);
+          return (
+            <Pressable
+              key={n}
+              onPress={() => handleSelectNrs(n)}
+              disabled={readOnly}
+              style={[
+                styles.nrsCell,
+                {
+                  backgroundColor: selected ? cellBand.color : Colors.background.white,
+                  borderColor: selected ? cellBand.color : Colors.border.light,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.nrsText,
+                  { color: selected ? Colors.text.white : Colors.text.primary },
+                ]}
+              >
+                {n}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      <Text style={styles.refTitle}>Caras de referencia (FPS-R)</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -114,7 +128,7 @@ export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
           return (
             <Pressable
               key={face.value}
-              onPress={() => handleSelect(face.value)}
+              onPress={() => handleSelectFace(face.value)}
               disabled={readOnly}
               style={[
                 styles.faceCard,
@@ -153,7 +167,7 @@ export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
               <Text
                 style={[
                   styles.faceLabel,
-                  { color: selected ? 'rgba(255,255,255,0.9)' : Colors.text.muted },
+                  { color: selected ? 'rgba(255,255,255,0.95)' : Colors.text.muted },
                 ]}
                 numberOfLines={2}
               >
@@ -166,13 +180,13 @@ export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
 
       <View style={styles.gradientBox}>
         <LinearGradient
-          colors={['#87CEEB', '#90EE90', '#FFD700', '#FF8C00', '#FF6347', '#DC143C']}
+          colors={['#3b82f6', '#22c55e', '#facc15', '#f97316', '#ef4444', '#7f1d1d']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.gradientBar}
         />
         <View style={styles.gradientLabels}>
-          {[1, 2.5, 4, 5.5, 7, 8.5, 10].map((n) => (
+          {[0, 2, 4, 6, 8, 10].map((n) => (
             <Text key={n} style={styles.gradientLabel}>
               {n}
             </Text>
@@ -180,43 +194,10 @@ export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
         </View>
       </View>
 
-      {!readOnly && onChange ? (
-        <View style={styles.fineTune}>
-          <View style={styles.fineTuneRow}>
-            <Text style={styles.fineLabel}>Ajuste fino:</Text>
-            <Text style={[styles.fineValue, { color: getScaleColor(normalized) }]}>
-              {normalized.toFixed(1)} / 10.0
-            </Text>
-          </View>
-          <View style={styles.stepperRow}>
-            <Pressable onPress={stepDown} style={styles.stepperBtn}>
-              <MaterialIcons name="remove" size={22} color={Colors.text.white} />
-            </Pressable>
-            <View style={styles.intensityBar}>
-              <View
-                style={[
-                  styles.intensityFill,
-                  {
-                    width: `${((normalized - 1) / 9) * 100}%`,
-                    backgroundColor: getScaleColor(normalized),
-                  },
-                ]}
-              />
-            </View>
-            <Pressable onPress={stepUp} style={styles.stepperBtn}>
-              <MaterialIcons name="add" size={22} color={Colors.text.white} />
-            </Pressable>
-          </View>
-          <Text style={styles.fineHint}>{closest.description}</Text>
-        </View>
-      ) : (
-        <View style={{ marginTop: Spacing.base, alignItems: 'center' }}>
-          <Text style={[styles.fineValue, { color: getScaleColor(normalized) }]}>
-            {normalized.toFixed(1)} / 10.0
-          </Text>
-          <Text style={styles.fineHint}>{closest.description}</Text>
-        </View>
-      )}
+      <View style={[styles.bandCard, { borderColor: band.color, backgroundColor: `${band.color}1A` }]}>
+        <Text style={[styles.bandLabel, { color: band.color }]}>{band.label}</Text>
+        <Text style={styles.bandDesc}>{band.description}</Text>
+      </View>
     </View>
   );
 };
@@ -227,7 +208,31 @@ const styles = StyleSheet.create({
     ...Typography.styles.h4,
     color: Colors.text.primary,
     textAlign: 'center',
+  },
+  subtitle: {
+    color: Colors.text.muted,
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4,
     marginBottom: Spacing.md,
+  },
+  nrsRow: { gap: 6, paddingVertical: 4 },
+  nrsCell: {
+    width: 44,
+    height: 48,
+    borderRadius: Radius.md,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+  },
+  nrsText: { fontSize: 18, fontWeight: '800' },
+  refTitle: {
+    ...Typography.styles.label,
+    color: Colors.text.muted,
+    textAlign: 'center',
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   facesRow: { gap: 8, paddingVertical: 4 },
   faceCard: {
@@ -253,38 +258,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   gradientLabel: { fontSize: 10, color: Colors.text.muted, fontWeight: '600' },
-  fineTune: { marginTop: Spacing.base },
-  fineTuneRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  bandCard: {
+    marginTop: Spacing.base,
+    padding: Spacing.base,
+    borderRadius: Radius.lg,
+    borderWidth: 2,
     alignItems: 'center',
-    marginBottom: Spacing.sm,
   },
-  fineLabel: { fontWeight: '600', color: Colors.text.primary },
-  fineValue: { fontSize: Typography.fontSize.xl, fontWeight: '800' },
-  fineHint: {
-    textAlign: 'center',
-    color: Colors.text.muted,
-    fontSize: 12,
-    marginTop: 6,
-  },
-  stepperRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  stepperBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: Colors.medical.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  intensityBar: {
-    flex: 1,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: Colors.background.gray,
-    overflow: 'hidden',
-  },
-  intensityFill: { height: '100%' },
+  bandLabel: { fontSize: Typography.fontSize.lg, fontWeight: '800' },
+  bandDesc: { color: Colors.text.secondary, marginTop: 4, textAlign: 'center', fontSize: 13 },
 });
 
 export default FacesPainScale;

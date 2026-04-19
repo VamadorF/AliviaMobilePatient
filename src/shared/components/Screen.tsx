@@ -29,7 +29,7 @@ export const Screen: React.FC<ScreenProps> = ({
   background = Colors.background.light,
   style,
   contentStyle,
-  edges = ['top', 'left', 'right'],
+  edges = ['top', 'left', 'right', 'bottom'],
   keyboardAware = false,
 }) => {
   const innerStyle: ViewStyle = {
