@@ -8,3 +8,6 @@ export { WizardLayout } from './WizardLayout';
 export { OptionPill } from './OptionPill';
 export { PainChart } from './PainChart';
 export type { ChartPoint, ChartType } from './PainChart';
+export { StreakBadges } from './StreakBadges';
+export type { StreakInfo } from './StreakBadges';
+export { PainGuidelines } from './PainGuidelines';

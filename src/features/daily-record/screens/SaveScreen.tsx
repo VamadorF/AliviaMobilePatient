@@ -6,6 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { WizardLayout, Card } from '@/shared/components';
 import { useDailyRecordData } from '@/features/daily-record/context/DailyRecordContext';
 import { useMedicationsStore } from '@/features/medications/store/medications.store';
+import { HealthAssistance } from '@/features/daily-record/components/HealthAssistance';
+import { CRITICAL_PAIN_THRESHOLD } from '@/app/config/constants';
 import httpClient from '@/shared/services/http/apiClient';
 import { Colors } from '@/shared/theme/colors';
 import { Radius, Spacing } from '@/shared/theme/spacing';
@@ -31,6 +33,9 @@ export const SaveScreen: React.FC = () => {
   const phq2Score = (data.phq2Answer1 ?? 0) + (data.phq2Answer2 ?? 0);
   const gad2Score = (data.gad2Answer1 ?? 0) + (data.gad2Answer2 ?? 0);
   const band = iaspBand(data.painIntensity);
+  const isCritical = data.painIntensity >= CRITICAL_PAIN_THRESHOLD;
+  const moodPattern: 'positive' | 'neutral' | 'negative' =
+    phq2Score >= 4 ? 'negative' : data.painIntensity <= 3 ? 'positive' : 'neutral';
 
   const handleSave = async () => {
     setSaving(true);
@@ -134,7 +139,7 @@ export const SaveScreen: React.FC = () => {
           {[data.primaryPainArea, ...data.secondaryPainAreas].filter(Boolean).join(', ') ||
             'No especificado'}
         </SummaryRow>
-        <SummaryRow label="Intensidad (NRS)">{data.painIntensity}/10 · {band.label}</SummaryRow>
+        <SummaryRow label="Intensidad">{data.painIntensity}/10 · {band.label}</SummaryRow>
         <SummaryRow label="Cualidades">
           {data.painQualities.length > 0 ? data.painQualities.join(', ') : 'Ninguna'}
         </SummaryRow>
@@ -159,6 +164,22 @@ export const SaveScreen: React.FC = () => {
           {data.recommendation?.category ?? 'Pendiente'}
         </SummaryRow>
       </Card>
+
+      {isCritical ? (
+        <Card background="#fee2e2" style={styles.criticalCard}>
+          <View style={styles.savedRow}>
+            <Ionicons name="alert-circle" size={24} color="#b91c1c" />
+            <Text style={styles.criticalTitle}>Mitigación pasiva activada</Text>
+          </View>
+          <Text style={styles.criticalText}>
+            Detectamos un dolor muy alto. Saltamos pasos no esenciales para que puedas
+            descansar. Aquí tienes apoyo inmediato:
+          </Text>
+          <View style={{ marginTop: Spacing.sm }}>
+            <HealthAssistance moodPattern={moodPattern} painLevel={data.painIntensity} />
+          </View>
+        </Card>
+      ) : null}
 
       {saved ? (
         <Card background="#ecfdf5">
@@ -233,6 +254,12 @@ const styles = StyleSheet.create({
     color: Colors.medical.green,
   },
   savedHint: { color: Colors.text.muted, marginTop: 4 },
+  criticalCard: { marginBottom: Spacing.base },
+  criticalTitle: {
+    ...Typography.styles.h4,
+    color: '#7f1d1d',
+  },
+  criticalText: { color: '#7f1d1d', marginTop: 4, fontSize: 13 },
 });
 
 export default SaveScreen;

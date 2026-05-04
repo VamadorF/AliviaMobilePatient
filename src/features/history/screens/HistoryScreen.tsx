@@ -4,7 +4,16 @@ import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Card, EmptyState, OptionPill, PainChart, Screen } from '@/shared/components';
+import {
+  Card,
+  EmptyState,
+  OptionPill,
+  PainChart,
+  PainGuidelines,
+  Screen,
+  StreakBadges,
+  type StreakInfo,
+} from '@/shared/components';
 import httpClient from '@/shared/services/http/apiClient';
 import { Colors } from '@/shared/theme/colors';
 import { Spacing } from '@/shared/theme/spacing';
@@ -25,9 +34,9 @@ const dayTypeColor = (t?: 'good' | 'neutral' | 'bad') => {
 };
 
 const dayTypeLabel = (t?: 'good' | 'neutral' | 'bad') => {
-  if (t === 'good') return 'Bueno';
-  if (t === 'bad') return 'Malo';
-  return 'Regular';
+  if (t === 'good') return 'Te sentiste bien';
+  if (t === 'bad') return 'Día difícil';
+  return 'Día normal';
 };
 
 export const HistoryScreen: React.FC = () => {
@@ -42,7 +51,7 @@ export const HistoryScreen: React.FC = () => {
     },
   });
 
-  const records = data?.records ?? [];
+  const records = useMemo(() => data?.records ?? [], [data?.records]);
 
   const filtered = useMemo(() => {
     if (range === 'all') return records;
@@ -58,6 +67,32 @@ export const HistoryScreen: React.FC = () => {
         .map((r) => ({ date: r.date, value: r.painIntensity })),
     [filtered],
   );
+
+  const historyStreak = useMemo<StreakInfo>(() => {
+    const sorted = [...records].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    );
+    let current = 0;
+    let best = 0;
+    let running = 0;
+    for (const r of sorted) {
+      if (r.dayType !== 'bad') {
+        running += 1;
+        best = Math.max(best, running);
+      } else {
+        running = 0;
+      }
+    }
+    for (let i = sorted.length - 1; i >= 0; i--) {
+      if (sorted[i].dayType !== 'bad') current += 1;
+      else break;
+    }
+    return {
+      current,
+      best,
+      totalRecords: data?.stats.totalRecords ?? records.length,
+    };
+  }, [records, data?.stats.totalRecords]);
 
   if (isLoading) {
     return (
@@ -85,9 +120,16 @@ export const HistoryScreen: React.FC = () => {
         ))}
       </View>
 
+      <Card style={{ marginBottom: Spacing.base }}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Tu constancia</Text>
+        </View>
+        <StreakBadges streak={historyStreak} />
+      </Card>
+
       <Card>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Evolución del dolor</Text>
+          <Text style={styles.cardTitle}>¿Cómo ha cambiado tu dolor?</Text>
           <View style={{ flexDirection: 'row', gap: 6 }}>
             <Pressable onPress={() => setChartType('line')} hitSlop={8}>
               <Ionicons
@@ -106,7 +148,10 @@ export const HistoryScreen: React.FC = () => {
           </View>
         </View>
         {chartPoints.length > 0 ? (
-          <PainChart data={chartPoints} type={chartType} height={220} color={Colors.medical.blue} />
+          <>
+            <PainChart data={chartPoints} type={chartType} height={220} color={Colors.medical.blue} />
+            <PainGuidelines values={chartPoints.map((p) => p.value)} />
+          </>
         ) : (
           <EmptyState title="Sin datos" description="No tienes registros en este rango." />
         )}

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Input, OptionPill, WizardLayout } from '@/shared/components';
 import { useDailyRecordData } from '@/features/daily-record/context/DailyRecordContext';
+import { CRITICAL_PAIN_THRESHOLD } from '@/app/config/constants';
 import { Colors } from '@/shared/theme/colors';
 import { Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
@@ -34,6 +35,12 @@ export const QualityScreen: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<DailyRecordStackParamList>>();
   const { data, updateData } = useDailyRecordData();
+
+  useEffect(() => {
+    if (data.painIntensity >= CRITICAL_PAIN_THRESHOLD) {
+      navigation.replace('Save');
+    }
+  }, [data.painIntensity, navigation]);
 
   const toggle = (id: string) => {
     const exists = data.painQualities.includes(id);

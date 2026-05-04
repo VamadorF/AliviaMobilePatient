@@ -72,12 +72,11 @@ export const EmotionalStateScreen: React.FC = () => {
       <Card style={styles.intro} background="#eef2ff">
         <View style={styles.introHeader}>
           <Ionicons name="information-circle" size={20} color={Colors.medical.blue} />
-          <Text style={styles.introTitle}>Estas preguntas son una herramienta validada</Text>
+          <Text style={styles.introTitle}>Cuéntanos cómo te has sentido</Text>
         </View>
         <Text style={styles.introText}>
-          Usamos PHQ-2 y GAD-2, dos cuestionarios cortos validados clínicamente para conocer
-          cómo está tu ánimo y nivel de ansiedad. No es un diagnóstico, es una forma cuidadosa
-          de escucharte.
+          Son unas pocas preguntas cortas para entender cómo está tu ánimo y nivel de
+          ansiedad. No es un diagnóstico, es una forma cuidadosa de escucharte.
         </Text>
       </Card>
 
