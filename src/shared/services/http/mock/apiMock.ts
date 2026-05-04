@@ -1,13 +1,47 @@
 import { STORAGE_KEYS } from '@/app/config/constants';
 import { localStorage } from '@/shared/services/storage/asyncStorage';
 import {
+  mockChatMessages,
   mockCommunities,
+  mockCommunityPosts,
   mockDashboard,
   mockHealthPro,
   mockIndications,
   mockMedicationsCatalog,
   mockUser,
+  mockVoiceSpaces,
 } from './mockData';
+
+const COMMUNITY_POSTS_KEY = 'alivia.community.posts';
+const CHAT_MESSAGES_KEY = 'alivia.chat.messages';
+
+const ensureChatStore = async () => {
+  const existing = await localStorage.getJSON<any[]>(CHAT_MESSAGES_KEY);
+  if (existing && existing.length) return existing;
+  await localStorage.setJSON(CHAT_MESSAGES_KEY, mockChatMessages);
+  return mockChatMessages.slice();
+};
+
+const ensurePostsStore = async () => {
+  const existing = await localStorage.getJSON<any[]>(COMMUNITY_POSTS_KEY);
+  if (existing && existing.length) return existing;
+  await localStorage.setJSON(COMMUNITY_POSTS_KEY, mockCommunityPosts);
+  return mockCommunityPosts.slice();
+};
+
+const aiAutoReply = (body: string): string => {
+  const lower = body.toLowerCase();
+  if (/dolor|duele/.test(lower) && /(8|9|10|fuerte|insoport)/.test(lower)) {
+    return 'Lamento que estés pasando por esto. Si el dolor es muy intenso o no cede, considera contactar a urgencia (131) o ir a tu SAPU. Mientras tanto, prueba la respiración 4-7-8.';
+  }
+  if (/sue[ñn]o|dormir/.test(lower)) {
+    return 'El sueño y el dolor están muy ligados. Intenta una rutina de relajación 30 minutos antes de acostarte y registra cómo te sientes mañana.';
+  }
+  if (/medic|pastilla|remedio/.test(lower)) {
+    return 'Recuerda registrar la medicación que tomaste en la app. Así tu equipo médico podrá ajustar tu tratamiento mejor.';
+  }
+  return 'Gracias por contarme. Estoy aquí para acompañarte. ¿Quieres que te sugiera un ejercicio breve para sentirte mejor?';
+};
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -96,6 +130,66 @@ export const apiMock = {
       return { data: { category, message } };
     }
 
+    if (url.includes('/chat/messages')) {
+      const messages = await ensureChatStore();
+      const channel = data?.channel === 'team' ? 'team' : 'ai';
+      const userMessage = {
+        id: `msg-${Date.now()}`,
+        channel,
+        authorName: 'Tú',
+        authorRole: 'PATIENT',
+        body: data?.body ?? '',
+        createdAt: new Date().toISOString(),
+      };
+      messages.push(userMessage);
+      let reply: any = null;
+      if (channel === 'ai') {
+        reply = {
+          id: `ai-${Date.now()}`,
+          channel: 'ai',
+          authorName: 'AlivIA IA',
+          authorRole: 'AlivIA',
+          body: aiAutoReply(userMessage.body),
+          createdAt: new Date(Date.now() + 1).toISOString(),
+        };
+        messages.push(reply);
+      }
+      await localStorage.setJSON(CHAT_MESSAGES_KEY, messages);
+      return { data: { message: userMessage, reply } };
+    }
+
+    if (url.match(/\/community\/[^/]+\/posts$/)) {
+      const posts = await ensurePostsStore();
+      const communityId = url.split('/')[2];
+      const post = {
+        id: `post-${Date.now()}`,
+        communityId,
+        authorId: 'u-1',
+        authorName: data?.authorName ?? 'Tú',
+        category: data?.category ?? 'experiencias',
+        title: data?.title ?? '',
+        body: data?.body ?? '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        likes: 0,
+      };
+      posts.unshift(post);
+      await localStorage.setJSON(COMMUNITY_POSTS_KEY, posts);
+      return { data: post };
+    }
+
+    if (url.includes('/voice-spaces/') && url.endsWith('/join')) {
+      const id = url.split('/')[2];
+      const space = mockVoiceSpaces.find((s) => s.id === id);
+      return {
+        data: {
+          space,
+          token: `mock-voice-token-${Date.now()}`,
+          provider: space?.provider ?? 'livekit',
+        },
+      };
+    }
+
     return { data: {} };
   },
 
@@ -149,8 +243,28 @@ export const apiMock = {
       return { data: [mockCommunities[0]] };
     }
 
+    if (url.match(/\/community\/[^/]+\/posts$/)) {
+      const communityId = url.split('/')[2];
+      const posts = await ensurePostsStore();
+      const queryString = url.includes('?') ? url.split('?')[1] ?? '' : '';
+      const params = new URLSearchParams(queryString);
+      const cat = params.get('category');
+      const filtered = posts.filter((p: any) => p.communityId === communityId);
+      const result = cat ? filtered.filter((p: any) => p.category === cat) : filtered;
+      return { data: result };
+    }
+
     if (url.includes('/community')) {
       return { data: mockCommunities };
+    }
+
+    if (url.includes('/chat/messages')) {
+      const messages = await ensureChatStore();
+      return { data: messages };
+    }
+
+    if (url.includes('/voice-spaces')) {
+      return { data: mockVoiceSpaces };
     }
 
     if (url.includes('/medications/search')) {
@@ -170,8 +284,24 @@ export const apiMock = {
     return { data: [] };
   },
 
-  async patch(_url: string, data?: any) {
+  async patch(url: string, data?: any) {
     await delay(300);
+
+    if (url.includes('/community/posts/')) {
+      const id = url.split('/').pop();
+      const posts = await ensurePostsStore();
+      const idx = posts.findIndex((p: any) => p.id === id);
+      if (idx >= 0) {
+        posts[idx] = {
+          ...posts[idx],
+          ...(data ?? {}),
+          updatedAt: new Date().toISOString(),
+        };
+        await localStorage.setJSON(COMMUNITY_POSTS_KEY, posts);
+        return { data: posts[idx] };
+      }
+    }
+
     return {
       data: { ...(data ?? {}), isResolved: true, resolvedAt: new Date().toISOString() },
     };
@@ -181,8 +311,17 @@ export const apiMock = {
     return apiMock.patch(url, data);
   },
 
-  async delete(_url: string) {
+  async delete(url: string) {
     await delay(300);
+
+    if (url.includes('/community/posts/')) {
+      const id = url.split('/').pop();
+      const posts = await ensurePostsStore();
+      const filtered = posts.filter((p: any) => p.id !== id);
+      await localStorage.setJSON(COMMUNITY_POSTS_KEY, filtered);
+      return { data: { success: true, id } };
+    }
+
     return { data: { success: true } };
   },
 };

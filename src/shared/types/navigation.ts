@@ -17,11 +17,22 @@ export type DailyRecordStackParamList = {
   Save: undefined;
 };
 
+export type CommunityStackParamList = {
+  CommunityHome: undefined;
+  VoiceSpaces: undefined;
+};
+
 export type MainTabsParamList = {
   Dashboard: undefined;
+  Community: NavigatorScreenParams<CommunityStackParamList>;
   DailyRecord: NavigatorScreenParams<DailyRecordStackParamList>;
-  Medications: undefined;
+  Chat: undefined;
   History: undefined;
+};
+
+export type RootMainStackParamList = {
+  Tabs: NavigatorScreenParams<MainTabsParamList>;
+  Medications: undefined;
 };
 
 export type RootStackParamList = {

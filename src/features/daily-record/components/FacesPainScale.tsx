@@ -80,7 +80,7 @@ export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
 
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.title}>Escala numérica del dolor (NRS-11)</Text>
+      <Text style={styles.title}>¿Cuánto duele?</Text>
       <Text style={styles.subtitle}>Toca el número que mejor representa tu dolor de 0 a 10</Text>
 
       <ScrollView
@@ -117,7 +117,7 @@ export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
         })}
       </ScrollView>
 
-      <Text style={styles.refTitle}>Caras de referencia (FPS-R)</Text>
+      <Text style={styles.refTitle}>O elige la cara que mejor te describe</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

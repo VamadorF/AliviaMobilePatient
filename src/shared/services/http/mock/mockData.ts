@@ -212,3 +212,94 @@ export const mockCommunities = [
     _count: { memberships: 89, posts: 23 },
   },
 ];
+
+export const mockChatMessages = [
+  {
+    id: 'ai-1',
+    channel: 'ai',
+    authorName: 'AlivIA IA',
+    authorRole: 'AlivIA',
+    body: 'Hola, soy AlivIA. ¿Cómo te sientes hoy? Cuéntame y te puedo ayudar a manejarlo.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+  },
+  {
+    id: 'team-1',
+    channel: 'team',
+    authorName: 'Dra. Carla Soto',
+    authorRole: 'DOCTOR',
+    body: 'Buenos días, recuerda que mañana tienes control. ¿Cómo estuvieron tus registros esta semana?',
+    createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+  },
+  {
+    id: 'team-2',
+    channel: 'team',
+    authorName: 'Klgo. Pablo Reyes',
+    authorRole: 'PHYSIOTHERAPIST',
+    body: 'Te envío los ejercicios de la semana, dime si alguno te genera más dolor.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+  },
+];
+
+export const mockCommunityPosts = [
+  {
+    id: 'post-1',
+    communityId: '1',
+    authorId: 'u-2',
+    authorName: 'Marcela R.',
+    category: 'experiencias',
+    title: '7 días seguidos sin pasar de 4/10',
+    body: 'Quería compartir que llevo una semana cuidándome y mi dolor ha bajado mucho.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+    likes: 12,
+  },
+  {
+    id: 'post-2',
+    communityId: '1',
+    authorId: 'u-3',
+    authorName: 'Diego F.',
+    category: 'preguntas',
+    title: '¿Alguien probó la respiración 4-7-8?',
+    body: '¿Les funcionó para el dolor lumbar? La estoy probando hace dos semanas.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+    likes: 4,
+  },
+  {
+    id: 'post-3',
+    communityId: '2',
+    authorId: 'u-4',
+    authorName: 'Antonia P.',
+    category: 'apoyo',
+    title: 'Hoy tuve un día difícil',
+    body: 'Necesitaba contar que hoy fue duro. Gracias por estar aquí.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
+    likes: 18,
+  },
+];
+
+export const mockVoiceSpaces = [
+  {
+    id: 'vs-1',
+    title: 'Conversemos: vivir con dolor crónico',
+    hostName: 'Dra. Carla Soto',
+    description: 'Espacio abierto para compartir experiencias y dudas con un equipo médico.',
+    scheduledFor: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
+    isLive: false,
+    participants: 0,
+    provider: 'livekit',
+    channelName: 'alivia-vs-1',
+  },
+  {
+    id: 'vs-2',
+    title: 'Pausa de respiración guiada',
+    hostName: 'Klga. Sofía Méndez',
+    description: 'Sesión de 15 minutos de respiración 4-7-8 en vivo.',
+    scheduledFor: null,
+    isLive: true,
+    participants: 7,
+    provider: 'livekit',
+    channelName: 'alivia-vs-2',
+  },
+];

@@ -67,7 +67,9 @@ export const MedicationScreen: React.FC = () => {
             <Button
               label="Ir a Medicamentos"
               variant="outline"
-              onPress={() => rootNavigation?.navigate('Medications' as never)}
+              onPress={() =>
+                rootNavigation?.getParent()?.navigate('Medications' as never)
+              }
               leftIcon={<Ionicons name="add-circle" size={18} color={Colors.medical.blue} />}
             />
           </View>

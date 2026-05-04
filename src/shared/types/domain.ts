@@ -80,3 +80,48 @@ export interface Recommendation {
   category: 'autocuidado' | 'cesfam-ccr' | 'sapu-sar' | 'urgencia';
   message: string;
 }
+
+/** Origen de un mensaje de chat: AlivIA IA o un miembro del equipo médico. */
+export type ChatChannel = 'ai' | 'team';
+
+export interface ChatMessage {
+  id: string;
+  channel: ChatChannel;
+  authorName: string;
+  authorRole: 'AlivIA' | 'PATIENT' | 'DOCTOR' | 'PSYCHOLOGIST' | 'PHYSIOTHERAPIST';
+  body: string;
+  createdAt: string;
+}
+
+export type CommunityPostCategory =
+  | 'experiencias'
+  | 'preguntas'
+  | 'logros'
+  | 'recursos'
+  | 'apoyo';
+
+export interface CommunityPost {
+  id: string;
+  communityId: string;
+  authorId: string;
+  authorName: string;
+  category: CommunityPostCategory;
+  title: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  likes: number;
+}
+
+export interface VoiceSpace {
+  id: string;
+  title: string;
+  hostName: string;
+  description: string;
+  scheduledFor: string | null;
+  isLive: boolean;
+  participants: number;
+  /** Proveedor WebRTC sincrónico. */
+  provider: 'agora' | 'livekit';
+  channelName: string;
+}
