@@ -45,7 +45,13 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
   const insets = useSafeAreaInsets();
 
   return (
-    <Screen scroll padded background={Colors.background.light} edges={['top', 'left', 'right']}>
+    <Screen
+      scroll
+      padded
+      bottomInset={120 + insets.bottom}
+      background={Colors.background.base}
+      edges={['top', 'left', 'right']}
+    >
       <View style={styles.headerRow}>
         <Pressable
           onPress={onBack}
@@ -53,7 +59,7 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
           disabled={!onBack}
           style={[styles.iconBtn, !onBack && styles.iconBtnHidden]}
         >
-          <Ionicons name="chevron-back" size={26} color={Colors.text.primary} />
+          <Ionicons name="chevron-back" size={24} color={Colors.text.primary} />
         </Pressable>
         <View style={styles.stepBadge}>
           <Text style={styles.stepText}>
@@ -66,12 +72,12 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
           disabled={!onClose}
           style={[styles.iconBtn, !onClose && styles.iconBtnHidden]}
         >
-          <Ionicons name="close" size={24} color={Colors.text.muted} />
+          <Ionicons name="close" size={22} color={Colors.text.muted} />
         </Pressable>
       </View>
 
       <View style={styles.progressRow}>
-        <ProgressBar progress={step / totalSteps} color={Colors.medical.blue} />
+        <ProgressBar progress={step / totalSteps} color={Colors.primary.base} />
         <Text style={styles.progressNumber}>
           {step} / {totalSteps}
         </Text>
@@ -84,14 +90,16 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
 
       <View style={styles.content}>{children}</View>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
+      <View style={styles.footer}>
         {onBack ? (
           <View style={styles.btnHalf}>
             <Button
               label={backLabel}
               variant="outline"
               onPress={onBack}
-              leftIcon={<Ionicons name="chevron-back" size={18} color={Colors.medical.blue} />}
+              leftIcon={
+                <Ionicons name="chevron-back" size={18} color={Colors.primary.base} />
+              }
             />
           </View>
         ) : null}
@@ -102,7 +110,9 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
               onPress={onNext}
               loading={loading}
               disabled={nextDisabled}
-              rightIcon={<Ionicons name="chevron-forward" size={18} color={Colors.text.white} />}
+              rightIcon={
+                <Ionicons name="chevron-forward" size={18} color={Colors.text.onAccent} />
+              }
             />
           </View>
         ) : null}
@@ -124,16 +134,17 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: Colors.background.surface,
   },
   iconBtnHidden: { opacity: 0 },
   stepBadge: {
-    backgroundColor: Colors.medical.blue,
+    backgroundColor: Colors.primary.soft,
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderRadius: 999,
   },
   stepText: {
-    color: Colors.text.white,
+    color: Colors.primary.base,
     fontSize: Typography.fontSize.xs,
     fontWeight: '700',
   },
@@ -147,8 +158,12 @@ const styles = StyleSheet.create({
   },
   titleBlock: { marginVertical: Spacing.lg },
   title: { ...Typography.styles.h2, color: Colors.text.primary },
-  subtitle: { ...Typography.styles.body, color: Colors.text.muted, marginTop: 4 },
-  content: { flex: 1, marginBottom: Spacing.lg },
+  subtitle: {
+    ...Typography.styles.body,
+    color: Colors.text.muted,
+    marginTop: 4,
+  },
+  content: { marginBottom: Spacing.lg },
   footer: {
     flexDirection: 'row',
     gap: Spacing.sm,

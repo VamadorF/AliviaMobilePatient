@@ -10,13 +10,20 @@ import { EmotionalStateScreen } from '@/features/daily-record/screens/EmotionalS
 import { MedicationScreen } from '@/features/daily-record/screens/MedicationScreen';
 import { RecommendationScreen } from '@/features/daily-record/screens/RecommendationScreen';
 import { SaveScreen } from '@/features/daily-record/screens/SaveScreen';
+import { Colors } from '@/shared/theme/colors';
 import type { DailyRecordStackParamList } from '@/shared/types/navigation';
 
 const Stack = createNativeStackNavigator<DailyRecordStackParamList>();
 
 export const DailyRecordStack: React.FC = () => (
   <DailyRecordProvider>
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: 'slide_from_right',
+        contentStyle: { backgroundColor: Colors.background.base },
+      }}
+    >
       <Stack.Screen name="Location" component={LocationScreen} />
       <Stack.Screen name="Intensity" component={IntensityScreen} />
       <Stack.Screen name="Quality" component={QualityScreen} />

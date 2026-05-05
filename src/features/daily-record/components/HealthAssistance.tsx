@@ -49,7 +49,7 @@ const centers: {
     phone: '600 360 7777',
     when: 'Consultas médicas generales, dudas sobre medicamentos',
     icon: 'call',
-    colors: ['#60a5fa', '#1d4ed8'],
+    colors: Colors.gradient.sky,
   },
   {
     name: 'SAPU (Servicio de Atención Primaria de Urgencia)',
@@ -57,7 +57,7 @@ const centers: {
     phone: 'Consultar en tu comuna',
     when: 'Urgencias que no requieren hospitalización',
     icon: 'medkit',
-    colors: ['#fbbf24', '#d97706'],
+    colors: Colors.gradient.gold,
   },
   {
     name: 'URGENCIA Hospitalaria',
@@ -65,7 +65,7 @@ const centers: {
     phone: '131',
     when: 'Emergencias graves, dolor intenso, síntomas severos',
     icon: 'warning',
-    colors: ['#fb7185', '#b91c1c'],
+    colors: Colors.gradient.coral,
   },
   {
     name: 'CESFAM (Centro de Salud Familiar)',
@@ -73,7 +73,7 @@ const centers: {
     phone: 'Consultar en tu comuna',
     when: 'Controles, seguimiento, recetas',
     icon: 'business',
-    colors: ['#34d399', '#047857'],
+    colors: Colors.gradient.primary,
   },
 ];
 
@@ -91,26 +91,32 @@ export const HealthAssistance: React.FC<HealthAssistanceProps> = ({
 
   return (
     <View style={{ gap: Spacing.base }}>
-      <LinearGradient
-        colors={['#fdf4ff', '#fce7f3']}
-        style={[styles.card, styles.cardBordered, { borderColor: '#e9d5ff' }]}
+      <View
+        style={[
+          styles.card,
+          styles.cardBordered,
+          { backgroundColor: Colors.accentSoft, borderColor: Colors.border.strong },
+        ]}
       >
         <View style={styles.cardHeader}>
-          <View style={[styles.iconBox, { backgroundColor: Colors.medical.purple }]}>
-            <Ionicons name="heart" size={18} color={Colors.text.white} />
+          <View style={[styles.iconBox, { backgroundColor: Colors.accentDeep }]}>
+            <Ionicons name="heart" size={18} color={Colors.text.onAccent} />
           </View>
           <Text style={styles.cardTitle}>Mensaje del día</Text>
         </View>
         <Text style={styles.phrase}>&ldquo;{randomPhrase}&rdquo;</Text>
-      </LinearGradient>
+      </View>
 
-      <LinearGradient
-        colors={['#ecfeff', '#cffafe']}
-        style={[styles.card, styles.cardBordered, { borderColor: '#a5f3fc' }]}
+      <View
+        style={[
+          styles.card,
+          styles.cardBordered,
+          { backgroundColor: Colors.primary.soft, borderColor: Colors.border.strong },
+        ]}
       >
         <View style={styles.cardHeader}>
-          <View style={[styles.iconBox, { backgroundColor: Colors.medical.teal }]}>
-            <Ionicons name="leaf" size={18} color={Colors.text.white} />
+          <View style={[styles.iconBox, { backgroundColor: Colors.primary.deep }]}>
+            <Ionicons name="leaf" size={18} color={Colors.text.onAccent} />
           </View>
           <Text style={styles.cardTitle}>Ejercicio respiratorio</Text>
         </View>
@@ -122,20 +128,20 @@ export const HealthAssistance: React.FC<HealthAssistanceProps> = ({
           <Text style={styles.bullet}>4. Repite 4 veces</Text>
         </View>
         <Button label="Iniciar ejercicio" variant="primary" />
-      </LinearGradient>
+      </View>
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <View style={[styles.iconBox, { backgroundColor: Colors.medical.blue }]}>
-            <Ionicons name="business" size={18} color={Colors.text.white} />
+          <View style={[styles.iconBox, { backgroundColor: Colors.primary.base }]}>
+            <Ionicons name="business" size={18} color={Colors.text.onAccent} />
           </View>
           <Text style={styles.cardTitle}>¿Dónde acudir?</Text>
         </View>
 
         <LinearGradient colors={recommended.colors} style={styles.recommendCard}>
           <View style={styles.cardHeader}>
-            <Ionicons name={recommended.icon} size={22} color={Colors.text.white} />
-            <Text style={[styles.cardTitle, { color: Colors.text.white }]}>
+            <Ionicons name={recommended.icon} size={22} color={Colors.text.onAccent} />
+            <Text style={[styles.cardTitle, { color: Colors.text.onAccent }]}>
               Recomendación para ti
             </Text>
           </View>
@@ -165,13 +171,13 @@ export const HealthAssistance: React.FC<HealthAssistanceProps> = ({
               <Ionicons
                 name={center.icon}
                 size={22}
-                color={isRecommended ? Colors.text.white : center.colors[1]}
+                color={isRecommended ? Colors.text.onAccent : center.colors[1]}
               />
               <View style={{ flex: 1 }}>
                 <Text
                   style={[
                     styles.centerName,
-                    { color: isRecommended ? Colors.text.white : Colors.text.primary },
+                    { color: isRecommended ? Colors.text.onAccent : Colors.text.primary },
                   ]}
                 >
                   {center.name}
@@ -179,7 +185,7 @@ export const HealthAssistance: React.FC<HealthAssistanceProps> = ({
                 <Text
                   style={[
                     styles.centerDesc,
-                    { color: isRecommended ? 'rgba(255,255,255,0.85)' : Colors.text.muted },
+                    { color: isRecommended ? 'rgba(11,15,26,0.78)' : Colors.text.muted },
                   ]}
                 >
                   {center.description}
@@ -197,7 +203,7 @@ const styles = StyleSheet.create({
   card: {
     padding: Spacing.base,
     borderRadius: Radius.xl,
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surfaceElevated,
     ...Shadow.md,
   },
   cardBordered: { borderWidth: 1 },
@@ -221,7 +227,7 @@ const styles = StyleSheet.create({
   },
   phrase: { fontStyle: 'italic', color: Colors.text.primary, fontSize: 16 },
   innerCard: {
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surfaceHigh,
     padding: Spacing.sm,
     borderRadius: Radius.lg,
     marginBottom: Spacing.sm,
@@ -233,9 +239,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     marginBottom: Spacing.base,
   },
-  recommendName: { color: Colors.text.white, fontWeight: '700', marginTop: 4 },
-  recommendDesc: { color: 'rgba(255,255,255,0.9)', fontSize: 13 },
-  recommendMeta: { color: 'rgba(255,255,255,0.9)', fontSize: 12, marginTop: 4 },
+  recommendName: { color: Colors.text.onAccent, fontWeight: '700', marginTop: 4 },
+  recommendDesc: { color: 'rgba(11,15,26,0.82)', fontSize: 13 },
+  recommendMeta: { color: 'rgba(11,15,26,0.82)', fontSize: 12, marginTop: 4 },
   metaLabel: { fontWeight: '700' },
   allCenters: {
     fontWeight: '600',
@@ -249,13 +255,13 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     borderRadius: Radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border.light,
+    borderColor: Colors.border.subtle,
     marginBottom: Spacing.sm,
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surfaceHigh,
   },
   centerRowActive: {
-    backgroundColor: Colors.medical.blue,
-    borderColor: Colors.medical.blue,
+    backgroundColor: Colors.primary.soft,
+    borderColor: Colors.primary.base,
   },
   centerName: { fontSize: 14, fontWeight: '700' },
   centerDesc: { fontSize: 12, marginTop: 2 },

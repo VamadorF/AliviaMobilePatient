@@ -11,7 +11,12 @@ interface OptionPillProps {
   style?: ViewStyle;
 }
 
-export const OptionPill: React.FC<OptionPillProps> = ({ label, selected, onPress, style }) => (
+export const OptionPill: React.FC<OptionPillProps> = ({
+  label,
+  selected,
+  onPress,
+  style,
+}) => (
   <Pressable
     onPress={onPress}
     style={({ pressed }) => [
@@ -21,7 +26,9 @@ export const OptionPill: React.FC<OptionPillProps> = ({ label, selected, onPress
       style,
     ]}
   >
-    <Text style={[styles.text, selected ? styles.textSelected : styles.textUnselected]}>
+    <Text
+      style={[styles.text, selected ? styles.textSelected : styles.textUnselected]}
+    >
       {label}
     </Text>
   </Pressable>
@@ -32,18 +39,19 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.base,
     borderRadius: Radius.full,
-    borderWidth: 2,
+    borderWidth: 1,
     margin: 4,
-    minHeight: 40,
+    minHeight: 38,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   selected: {
-    backgroundColor: Colors.medical.blue,
-    borderColor: Colors.medical.blue,
+    backgroundColor: Colors.primary.base,
+    borderColor: Colors.primary.base,
   },
   unselected: {
-    backgroundColor: Colors.background.white,
-    borderColor: Colors.border.medium,
+    backgroundColor: Colors.background.surfaceHigh,
+    borderColor: Colors.border.subtle,
   },
   pressed: { opacity: 0.85 },
   text: {
@@ -51,6 +59,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  textSelected: { color: Colors.text.white },
-  textUnselected: { color: Colors.text.primary },
+  textSelected: { color: Colors.text.onAccent },
+  textUnselected: { color: Colors.text.secondary },
 });

@@ -11,7 +11,12 @@ interface EmptyStateProps {
   action?: ReactNode;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description, action }) => {
+export const EmptyState: React.FC<EmptyStateProps> = ({
+  icon,
+  title,
+  description,
+  action,
+}) => {
   return (
     <View style={styles.container}>
       {icon ? <View style={styles.icon}>{icon}</View> : null}
@@ -24,10 +29,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: Spacing.xl,
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.base,
   },
   icon: { marginBottom: Spacing.base },
   title: {
@@ -37,7 +42,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   description: {
-    ...Typography.styles.body,
+    ...Typography.styles.bodySmall,
     color: Colors.text.muted,
     textAlign: 'center',
   },

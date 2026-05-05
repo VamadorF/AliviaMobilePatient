@@ -1,6 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Modal,
   Pressable,
@@ -9,7 +8,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import {
   Button,
@@ -18,22 +18,19 @@ import {
   OptionPill,
   Screen,
 } from '@/shared/components';
-import httpClient from '@/shared/services/http/apiClient';
+import { useAuthStore } from '@/features/auth/store/auth.store';
+import {
+  useCommunityStore,
+  type Community,
+} from '@/features/community/store/community.store';
 import type {
   CommunityPost,
   CommunityPostCategory,
 } from '@/shared/types/domain';
+import type { CommunityStackParamList } from '@/shared/types/navigation';
 import { Colors } from '@/shared/theme/colors';
 import { Radius, Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
-
-interface Community {
-  id: string;
-  name: string;
-  pathology: string;
-  description: string;
-  _count: { memberships: number; posts: number };
-}
 
 const categories: { id: CommunityPostCategory; label: string }[] = [
   { id: 'experiencias', label: 'Experiencias' },
@@ -43,11 +40,18 @@ const categories: { id: CommunityPostCategory; label: string }[] = [
   { id: 'apoyo', label: 'Apoyo' },
 ];
 
-const CURRENT_AUTHOR_ID = 'u-1';
-const CURRENT_AUTHOR_NAME = 'Tú';
-
 export const CommunityScreen: React.FC = () => {
-  const queryClient = useQueryClient();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<CommunityStackParamList>>();
+  const user = useAuthStore((s) => s.user);
+  const hydrate = useCommunityStore((s) => s.hydrate);
+  const hydrated = useCommunityStore((s) => s.hydrated);
+  const communities = useCommunityStore((s) => s.communities);
+  const postsForCommunity = useCommunityStore((s) => s.postsForCommunity);
+  const createPost = useCommunityStore((s) => s.createPost);
+  const updatePost = useCommunityStore((s) => s.updatePost);
+  const deletePost = useCommunityStore((s) => s.deletePost);
+
   const [activeCommunity, setActiveCommunity] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] =
     useState<CommunityPostCategory | 'all'>('all');
@@ -55,99 +59,59 @@ export const CommunityScreen: React.FC = () => {
     visible: boolean;
     post: CommunityPost | null;
   }>({ visible: false, post: null });
+  const [busy, setBusy] = useState(false);
 
-  const { data: communities, isLoading: loadingComms } = useQuery<Community[]>({
-    queryKey: ['communities'],
-    queryFn: async () => {
-      const res = await httpClient.get('/community');
-      return res.data;
-    },
-  });
+  useEffect(() => {
+    hydrate().catch(() => {});
+  }, [hydrate]);
 
-  const selectedCommunityId = activeCommunity ?? communities?.[0]?.id ?? null;
+  const authorId = user?.id ?? 'demo-local';
+  const authorName =
+    user?.firstName && user?.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : 'Tú';
 
-  const { data: posts, isLoading: loadingPosts } = useQuery<CommunityPost[]>({
-    queryKey: ['community-posts', selectedCommunityId],
-    enabled: !!selectedCommunityId,
-    queryFn: async () => {
-      const res = await httpClient.get(
-        `/community/${selectedCommunityId}/posts`,
-      );
-      return res.data;
-    },
-  });
+  const selectedCommunityId = activeCommunity ?? communities[0]?.id ?? null;
 
   const filtered = useMemo(() => {
-    if (!posts) return [];
-    return filterCategory === 'all'
-      ? posts
-      : posts.filter((p) => p.category === filterCategory);
-  }, [posts, filterCategory]);
-
-  const createMutation = useMutation({
-    mutationFn: async (input: {
-      title: string;
-      body: string;
-      category: CommunityPostCategory;
-    }) => {
-      if (!selectedCommunityId) throw new Error('No community selected');
-      const res = await httpClient.post(
-        `/community/${selectedCommunityId}/posts`,
-        {
-          ...input,
-          authorName: CURRENT_AUTHOR_NAME,
-        },
-      );
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['community-posts', selectedCommunityId],
-      });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async (input: {
-      id: string;
-      title: string;
-      body: string;
-      category: CommunityPostCategory;
-    }) => {
-      const res = await httpClient.patch(
-        `/community/posts/${input.id}`,
-        input,
-      );
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['community-posts', selectedCommunityId],
-      });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await httpClient.delete(`/community/posts/${id}`);
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['community-posts', selectedCommunityId],
-      });
-    },
-  });
+    const posts = selectedCommunityId ? postsForCommunity(selectedCommunityId) : [];
+    if (filterCategory === 'all') return posts;
+    return posts.filter((p) => p.category === filterCategory);
+  }, [selectedCommunityId, postsForCommunity, filterCategory]);
 
   const handleDelete = (post: CommunityPost) => {
-    const confirmAndDelete = () => deleteMutation.mutate(post.id);
+    const run = () => deletePost(post.id);
     if (typeof Alert?.alert === 'function') {
       Alert.alert('Eliminar publicación', '¿Quieres eliminarla?', [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', style: 'destructive', onPress: confirmAndDelete },
+        { text: 'Eliminar', style: 'destructive', onPress: run },
       ]);
     } else {
-      confirmAndDelete();
+      run();
+    }
+  };
+
+  const submitPost = async (input: {
+    title: string;
+    body: string;
+    category: CommunityPostCategory;
+  }) => {
+    if (!selectedCommunityId) return;
+    setBusy(true);
+    try {
+      if (editor.post) {
+        await updatePost(editor.post.id, input);
+      } else {
+        await createPost({
+          communityId: selectedCommunityId,
+          ...input,
+          authorId,
+          authorName,
+        });
+      }
+      setEditor({ visible: false, post: null });
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -158,12 +122,30 @@ export const CommunityScreen: React.FC = () => {
         Comparte cómo te has sentido, pregunta y apóyate en otros.
       </Text>
 
+      <Pressable
+        onPress={() => navigation.navigate('VoiceSpaces')}
+        style={styles.voiceBanner}
+      >
+        <Card variant="elevated" padded>
+          <View style={styles.voiceRow}>
+            <View style={styles.voiceIcon}>
+              <Ionicons name="mic" size={20} color={Colors.text.onAccent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.voiceTitle}>Espacios de voz</Text>
+              <Text style={styles.voiceHint}>Sesiones grupales demo · sin audio real</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.text.muted} />
+          </View>
+        </Card>
+      </Pressable>
+
       <Text style={styles.sectionLabel}>Tus comunidades</Text>
-      {loadingComms ? (
-        <ActivityIndicator color={Colors.medical.blue} />
+      {!hydrated ? (
+        <Text style={styles.loading}>Cargando…</Text>
       ) : (
         <View style={styles.commsRow}>
-          {(communities ?? []).map((c) => (
+          {(communities as Community[]).map((c) => (
             <OptionPill
               key={c.id}
               label={`${c.name} · ${c._count?.memberships ?? 0}`}
@@ -174,14 +156,26 @@ export const CommunityScreen: React.FC = () => {
         </View>
       )}
 
+      {selectedCommunityId ? (
+        <Button
+          label="Ver foro completo"
+          variant="outline"
+          size="sm"
+          fullWidth
+          style={{ marginTop: Spacing.sm }}
+          onPress={() =>
+            navigation.navigate('CommunityDetail', { communityId: selectedCommunityId })
+          }
+        />
+      ) : null}
+
       <View style={styles.toolbar}>
         <Text style={styles.sectionLabel}>Publicaciones</Text>
         <Button
           label="Nueva"
           size="sm"
-          leftIcon={
-            <Ionicons name="add-circle" size={16} color={Colors.text.white} />
-          }
+          fullWidth={false}
+          leftIcon={<Ionicons name="add-circle" size={16} color={Colors.text.onAccent} />}
           onPress={() => setEditor({ visible: true, post: null })}
         />
       </View>
@@ -202,8 +196,8 @@ export const CommunityScreen: React.FC = () => {
         ))}
       </View>
 
-      {loadingPosts ? (
-        <ActivityIndicator color={Colors.medical.blue} />
+      {!hydrated ? (
+        <Text style={styles.loading}>Cargando publicaciones…</Text>
       ) : filtered.length === 0 ? (
         <Card>
           <EmptyState
@@ -218,23 +212,20 @@ export const CommunityScreen: React.FC = () => {
               <View style={{ flex: 1 }}>
                 <Text style={styles.postTitle}>{p.title}</Text>
                 <Text style={styles.postMeta}>
-                  {p.authorName} · {categories.find((c) => c.id === p.category)?.label ?? p.category}
+                  {p.authorName} ·{' '}
+                  {categories.find((c) => c.id === p.category)?.label ?? p.category}
                 </Text>
               </View>
-              {p.authorId === CURRENT_AUTHOR_ID ? (
+              {p.authorId === authorId ? (
                 <View style={{ flexDirection: 'row', gap: 6 }}>
                   <Pressable
                     onPress={() => setEditor({ visible: true, post: p })}
                     hitSlop={8}
                   >
-                    <Ionicons
-                      name="create-outline"
-                      size={20}
-                      color={Colors.medical.blue}
-                    />
+                    <Ionicons name="create-outline" size={20} color={Colors.primary.base} />
                   </Pressable>
                   <Pressable onPress={() => handleDelete(p)} hitSlop={8}>
-                    <Ionicons name="trash-outline" size={20} color="#b91c1c" />
+                    <Ionicons name="trash-outline" size={20} color={Colors.status.error} />
                   </Pressable>
                 </View>
               ) : null}
@@ -252,15 +243,8 @@ export const CommunityScreen: React.FC = () => {
         visible={editor.visible}
         post={editor.post}
         onClose={() => setEditor({ visible: false, post: null })}
-        onSubmit={async (input) => {
-          if (editor.post) {
-            await updateMutation.mutateAsync({ id: editor.post.id, ...input });
-          } else {
-            await createMutation.mutateAsync(input);
-          }
-          setEditor({ visible: false, post: null });
-        }}
-        loading={createMutation.isPending || updateMutation.isPending}
+        onSubmit={submitPost}
+        loading={busy}
       />
     </Screen>
   );
@@ -300,12 +284,7 @@ const PostEditor: React.FC<PostEditorProps> = ({
   const canSubmit = title.trim().length > 0 && body.trim().length > 0;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.modalBackdrop}>
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
@@ -333,6 +312,7 @@ const PostEditor: React.FC<PostEditorProps> = ({
           <TextInput
             style={styles.input}
             placeholder="Un título breve"
+            placeholderTextColor={Colors.text.muted}
             value={title}
             onChangeText={setTitle}
           />
@@ -341,6 +321,7 @@ const PostEditor: React.FC<PostEditorProps> = ({
           <TextInput
             style={[styles.input, styles.textarea]}
             placeholder="Comparte tu experiencia"
+            placeholderTextColor={Colors.text.muted}
             value={body}
             onChangeText={setBody}
             multiline
@@ -350,9 +331,7 @@ const PostEditor: React.FC<PostEditorProps> = ({
             label={post ? 'Guardar cambios' : 'Publicar'}
             disabled={!canSubmit}
             loading={loading}
-            onPress={() =>
-              onSubmit({ title: title.trim(), body: body.trim(), category })
-            }
+            onPress={() => onSubmit({ title: title.trim(), body: body.trim(), category })}
             fullWidth
           />
         </View>
@@ -364,6 +343,19 @@ const PostEditor: React.FC<PostEditorProps> = ({
 const styles = StyleSheet.create({
   title: { ...Typography.styles.h2, color: Colors.text.primary },
   subtitle: { color: Colors.text.muted, marginBottom: Spacing.base },
+  voiceBanner: { marginBottom: Spacing.base },
+  voiceRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  voiceIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primary.base,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  voiceTitle: { ...Typography.styles.h4, color: Colors.text.primary },
+  voiceHint: { color: Colors.text.muted, fontSize: 12, marginTop: 2 },
+  loading: { color: Colors.text.muted, marginVertical: Spacing.sm },
   sectionLabel: {
     ...Typography.styles.h4,
     color: Colors.text.primary,
@@ -412,13 +404,13 @@ const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: Colors.background.overlay,
   },
   modalContent: {
-    backgroundColor: Colors.background.light,
+    backgroundColor: Colors.background.surfaceElevated,
     padding: Spacing.base,
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
+    borderTopLeftRadius: Radius['2xl'],
+    borderTopRightRadius: Radius['2xl'],
     gap: Spacing.xs,
   },
   modalHeader: {
@@ -429,16 +421,16 @@ const styles = StyleSheet.create({
   modalTitle: { ...Typography.styles.h3, color: Colors.text.primary },
   fieldLabel: {
     ...Typography.styles.label,
-    color: Colors.text.primary,
+    color: Colors.text.secondary,
     marginTop: Spacing.sm,
   },
   input: {
     borderWidth: 1,
-    borderColor: Colors.border.light,
+    borderColor: Colors.border.subtle,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surfaceHigh,
     color: Colors.text.primary,
   },
   textarea: { minHeight: 100, textAlignVertical: 'top' },

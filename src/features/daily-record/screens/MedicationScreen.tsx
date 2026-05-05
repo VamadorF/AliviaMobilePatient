@@ -56,7 +56,7 @@ export const MedicationScreen: React.FC = () => {
       {meds.length === 0 ? (
         <Card style={styles.emptyCard}>
           <View style={styles.emptyHeader}>
-            <Ionicons name="medkit-outline" size={28} color={Colors.medical.blue} />
+            <Ionicons name="medkit-outline" size={28} color={Colors.primary.base} />
             <Text style={styles.emptyTitle}>Aún no tienes medicamentos</Text>
           </View>
           <Text style={styles.emptyText}>
@@ -70,7 +70,7 @@ export const MedicationScreen: React.FC = () => {
               onPress={() =>
                 rootNavigation?.getParent()?.navigate('Medications' as never)
               }
-              leftIcon={<Ionicons name="add-circle" size={18} color={Colors.medical.blue} />}
+              leftIcon={<Ionicons name="add-circle" size={18} color={Colors.primary.base} />}
             />
           </View>
         </Card>
@@ -105,7 +105,7 @@ export const MedicationScreen: React.FC = () => {
                   </View>
                   <View style={[styles.toggle, taken && styles.toggleOn]}>
                     {taken ? (
-                      <Ionicons name="checkmark" size={18} color="#fff" />
+                      <Ionicons name="checkmark" size={18} color={Colors.text.onAccent} />
                     ) : (
                       <Text style={styles.toggleText}>Marcar</Text>
                     )}
@@ -158,7 +158,7 @@ export const MedicationScreen: React.FC = () => {
                   : 'radio-button-off'
               }
               size={20}
-              color={Colors.medical.blue}
+              color={Colors.primary.base}
             />
             <Text style={styles.noneText}>Hoy no tomé ningún medicamento</Text>
           </Pressable>
@@ -169,7 +169,7 @@ export const MedicationScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  emptyCard: { backgroundColor: '#eff6ff' },
+  emptyCard: { backgroundColor: Colors.primary.soft },
   emptyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -182,10 +182,10 @@ const styles = StyleSheet.create({
     padding: Spacing.base,
     borderRadius: Radius.lg,
     borderWidth: 2,
-    borderColor: Colors.border.light,
-    backgroundColor: Colors.background.white,
+    borderColor: Colors.border.subtle,
+    backgroundColor: Colors.background.surface,
   },
-  medCardActive: { borderColor: Colors.medical.blue, backgroundColor: '#eff6ff' },
+  medCardActive: { borderColor: Colors.primary.base, backgroundColor: Colors.primary.soft },
   medHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   medName: { ...Typography.styles.label, color: Colors.text.primary },
   medSubstance: { color: Colors.text.muted, fontSize: 12, fontStyle: 'italic' },
@@ -196,13 +196,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 2,
-    borderColor: Colors.medical.blue,
+    borderColor: Colors.primary.base,
     minWidth: 60,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  toggleOn: { backgroundColor: Colors.medical.blue },
-  toggleText: { color: Colors.medical.blue, fontWeight: '700', fontSize: 12 },
+  toggleOn: { backgroundColor: Colors.primary.base },
+  toggleText: { color: Colors.primary.base, fontWeight: '700', fontSize: 12 },
   reliefBlock: { marginTop: Spacing.sm },
   reliefHeader: {
     flexDirection: 'row',
@@ -211,21 +211,21 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   reliefLabel: { ...Typography.styles.label, color: Colors.text.primary },
-  reliefValue: { color: Colors.medical.blue, fontWeight: '800' },
+  reliefValue: { color: Colors.primary.base, fontWeight: '800' },
   scaleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   dot: {
     width: 30,
     height: 30,
     borderRadius: 15,
     borderWidth: 2,
-    borderColor: Colors.border.light,
+    borderColor: Colors.border.subtle,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surfaceHigh,
   },
-  dotSelected: { backgroundColor: Colors.medical.blue, borderColor: Colors.medical.blue },
+  dotSelected: { backgroundColor: Colors.primary.base, borderColor: Colors.primary.base },
   dotText: { fontSize: 11, fontWeight: '600', color: Colors.text.primary },
-  dotTextSelected: { color: Colors.text.white },
+  dotTextSelected: { color: Colors.text.onAccent },
   noneRow: {
     marginTop: Spacing.sm,
     flexDirection: 'row',

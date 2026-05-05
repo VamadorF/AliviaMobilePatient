@@ -36,7 +36,7 @@ export const PainChart: React.FC<PainChartProps> = ({
   height = 220,
   showGrid = true,
   yMax = 10,
-  color = Colors.medical.blue,
+  color = Colors.primary.base,
   title,
 }) => {
   const [size, setSize] = useState({ width: 0, height });
@@ -69,7 +69,10 @@ export const PainChart: React.FC<PainChartProps> = ({
     <View
       style={[styles.container, { height }]}
       onLayout={(e) =>
-        setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })
+        setSize({
+          width: e.nativeEvent.layout.width,
+          height: e.nativeEvent.layout.height,
+        })
       }
     >
       {title ? <Text style={styles.title}>{title}</Text> : null}
@@ -85,9 +88,9 @@ export const PainChart: React.FC<PainChartProps> = ({
                     x2={PADDING.left + innerW}
                     y1={y}
                     y2={y}
-                    stroke={Colors.border.light}
+                    stroke={Colors.border.subtle}
                     strokeWidth={1}
-                    strokeDasharray="4 4"
+                    strokeDasharray="3 5"
                   />
                 );
               })
@@ -161,7 +164,7 @@ export const PainChart: React.FC<PainChartProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    backgroundColor: Colors.background.white,
+    backgroundColor: 'transparent',
   },
   title: {
     ...Typography.styles.label,

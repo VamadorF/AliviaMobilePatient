@@ -53,7 +53,7 @@ export const Input = forwardRef<TextInput, InputProps>(
           <TextInput
             ref={ref}
             style={[styles.input, style]}
-            placeholderTextColor={Colors.text.light}
+            placeholderTextColor={Colors.text.muted}
             onFocus={(e) => {
               setFocused(true);
               onFocus?.(e);
@@ -83,21 +83,21 @@ const styles = StyleSheet.create({
   label: {
     fontSize: Typography.fontSize.sm,
     fontWeight: '600' as TextStyle['fontWeight'],
-    color: Colors.text.primary,
+    color: Colors.text.secondary,
     marginBottom: Spacing.xs,
   },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: Radius.lg,
-    borderWidth: 2,
-    borderColor: Colors.border.light,
-    backgroundColor: Colors.background.white,
+    borderWidth: 1,
+    borderColor: Colors.border.subtle,
+    backgroundColor: Colors.background.surfaceHigh,
     paddingHorizontal: Spacing.md,
-    minHeight: 48,
+    minHeight: 52,
   },
   inputWrapFocused: {
-    borderColor: Colors.medical.blue,
+    borderColor: Colors.primary.base,
   },
   inputWrapError: {
     borderColor: Colors.status.error,

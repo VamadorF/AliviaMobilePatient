@@ -13,8 +13,8 @@ interface ProgressBarProps {
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({
   progress,
-  color = Colors.medical.blue,
-  trackColor = Colors.background.gray,
+  color = Colors.primary.base,
+  trackColor = Colors.background.surfaceHigh,
   height = 8,
   style,
 }) => {
@@ -24,11 +24,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       <View
         style={[
           styles.fill,
-          {
-            width: `${clamped * 100}%`,
-            backgroundColor: color,
-            height,
-          },
+          { width: `${clamped * 100}%`, backgroundColor: color, height },
         ]}
       />
     </View>
@@ -36,12 +32,6 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 };
 
 const styles = StyleSheet.create({
-  track: {
-    width: '100%',
-    borderRadius: Radius.full,
-    overflow: 'hidden',
-  },
-  fill: {
-    borderRadius: Radius.full,
-  },
+  track: { width: '100%', borderRadius: Radius.full, overflow: 'hidden' },
+  fill: { borderRadius: Radius.full },
 });

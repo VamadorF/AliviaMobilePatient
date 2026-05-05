@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm, Controller } from 'react-hook-form';
@@ -13,6 +13,7 @@ import { Colors } from '@/shared/theme/colors';
 import { Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
 import { useAuthStore } from '@/features/auth/store/auth.store';
+import { AppImages } from '@/shared/assets/images';
 import type { AuthStackParamList } from '@/shared/types/navigation';
 
 const schema = z.object({
@@ -69,6 +70,14 @@ export const RegisterScreen: React.FC = () => {
           <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={26} color={Colors.text.white} />
           </Pressable>
+          <View style={styles.registerLogoWrap}>
+            <Image
+              source={AppImages.aliviaLogo}
+              style={styles.registerLogo}
+              resizeMode="contain"
+              accessibilityLabel="Alivia"
+            />
+          </View>
           <Text style={styles.title}>Crea tu cuenta</Text>
           <Text style={styles.subtitle}>Regístrate para comenzar a registrar tu dolor</Text>
         </View>
@@ -105,7 +114,7 @@ export const RegisterScreen: React.FC = () => {
                 onChangeText={onChange}
                 onBlur={onBlur}
                 error={errors.firstName?.message}
-                leftIcon={<Ionicons name="person" size={18} color={Colors.medical.blue} />}
+                leftIcon={<Ionicons name="person" size={18} color={Colors.primary.base} />}
               />
             )}
           />
@@ -121,7 +130,7 @@ export const RegisterScreen: React.FC = () => {
                 onChangeText={onChange}
                 onBlur={onBlur}
                 error={errors.lastName?.message}
-                leftIcon={<Ionicons name="people" size={18} color={Colors.medical.blue} />}
+                leftIcon={<Ionicons name="people" size={18} color={Colors.primary.base} />}
               />
             )}
           />
@@ -139,7 +148,7 @@ export const RegisterScreen: React.FC = () => {
                 onChangeText={onChange}
                 onBlur={onBlur}
                 error={errors.email?.message}
-                leftIcon={<Ionicons name="mail" size={18} color={Colors.medical.blue} />}
+                leftIcon={<Ionicons name="mail" size={18} color={Colors.primary.base} />}
               />
             )}
           />
@@ -156,7 +165,7 @@ export const RegisterScreen: React.FC = () => {
                 onChangeText={onChange}
                 onBlur={onBlur}
                 error={errors.password?.message}
-                leftIcon={<Ionicons name="lock-closed" size={18} color={Colors.medical.blue} />}
+                leftIcon={<Ionicons name="lock-closed" size={18} color={Colors.primary.base} />}
               />
             )}
           />
@@ -165,7 +174,7 @@ export const RegisterScreen: React.FC = () => {
             label="Crear cuenta"
             onPress={handleSubmit(onSubmit)}
             loading={isLoading}
-            leftIcon={<Ionicons name="person-add" size={18} color={Colors.text.white} />}
+            leftIcon={<Ionicons name="person-add" size={18} color={Colors.text.onAccent} />}
           />
 
           <Pressable
@@ -198,11 +207,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  registerLogoWrap: {
+    alignSelf: 'center',
+    width: 72,
+    height: 72,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  registerLogo: { width: '100%', height: '100%' },
   title: {
     ...Typography.styles.h2,
     color: Colors.text.white,
     textAlign: 'center',
-    marginTop: Spacing['2xl'],
+    marginTop: Spacing.sm,
   },
   subtitle: {
     ...Typography.styles.body,
@@ -210,19 +227,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   card: {
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surfaceElevated,
     borderRadius: 24,
     padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border.subtle,
   },
   errorBox: {
-    backgroundColor: '#fef2f2',
+    backgroundColor: 'rgba(255, 100, 121, 0.12)',
     borderLeftWidth: 4,
-    borderLeftColor: Colors.medical.red,
+    borderLeftColor: Colors.status.error,
     padding: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.base,
   },
-  errorText: { color: '#b91c1c', fontWeight: '600' },
+  errorText: { color: Colors.status.error, fontWeight: '600' },
   sectionTitle: {
     ...Typography.styles.label,
     color: Colors.text.primary,
@@ -239,6 +258,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: Spacing.lg,
   },
-  linkText: { color: Colors.medical.blue, fontSize: 14 },
+  linkText: { color: Colors.primary.base, fontSize: 14 },
   linkBold: { fontWeight: '700' },
 });

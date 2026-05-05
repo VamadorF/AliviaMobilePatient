@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   label: { ...Typography.styles.label, color: Colors.text.primary },
   value: {
     fontWeight: '800',
-    color: Colors.medical.blue,
+    color: Colors.primary.base,
     fontSize: Typography.fontSize.lg,
   },
   scaleRow: {
@@ -115,15 +115,15 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surfaceHigh,
     borderWidth: 2,
-    borderColor: Colors.border.light,
+    borderColor: Colors.border.subtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dotSelected: { backgroundColor: Colors.medical.blue, borderColor: Colors.medical.blue },
+  dotSelected: { backgroundColor: Colors.primary.base, borderColor: Colors.primary.base },
   dotText: { fontSize: 12, color: Colors.text.primary, fontWeight: '600' },
-  dotTextSelected: { color: Colors.text.white },
+  dotTextSelected: { color: Colors.text.onAccent },
   legendRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

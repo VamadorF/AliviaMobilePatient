@@ -9,10 +9,10 @@ import {
   TextStyle,
 } from 'react-native';
 import { Colors } from '@/shared/theme/colors';
-import { Radius, Spacing, Shadow } from '@/shared/theme/spacing';
+import { Radius, Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
 
-type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'pill';
 type Size = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
@@ -62,7 +62,13 @@ export const Button: React.FC<ButtonProps> = ({
       ) : (
         <View style={styles.contentRow}>
           {leftIcon ? <View style={styles.iconLeft}>{leftIcon}</View> : null}
-          <Text style={[styles.text, textSizeStyles[size], { color: textVariantColor[variant] }]}>
+          <Text
+            style={[
+              styles.text,
+              textSizeStyles[size],
+              { color: textVariantColor[variant] },
+            ]}
+          >
             {label}
           </Text>
           {rightIcon ? <View style={styles.iconRight}>{rightIcon}</View> : null}
@@ -74,16 +80,19 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: Radius.xl,
+    borderRadius: Radius.full,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    ...Shadow.md,
   },
   fullWidth: { width: '100%' },
-  pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
-  disabled: { opacity: 0.5 },
-  contentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  pressed: { opacity: 0.88, transform: [{ scale: 0.98 }] },
+  disabled: { opacity: 0.45 },
+  contentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   iconLeft: { marginRight: Spacing.sm },
   iconRight: { marginLeft: Spacing.sm },
   text: { fontWeight: '700' as TextStyle['fontWeight'] },
@@ -102,27 +111,28 @@ const textSizeStyles: Record<Size, TextStyle> = {
 };
 
 const variantStyles: Record<Variant, ViewStyle> = {
-  primary: { backgroundColor: Colors.medical.blue },
-  secondary: { backgroundColor: Colors.medical.purple },
+  primary: { backgroundColor: Colors.primary.base },
+  secondary: { backgroundColor: Colors.accent },
   outline: {
     backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: Colors.medical.blue,
-    elevation: 0,
-    shadowOpacity: 0,
+    borderWidth: 1.5,
+    borderColor: Colors.primary.base,
   },
-  ghost: {
-    backgroundColor: 'transparent',
-    elevation: 0,
-    shadowOpacity: 0,
-  },
+  ghost: { backgroundColor: 'transparent' },
   danger: { backgroundColor: Colors.medical.red },
+  pill: {
+    backgroundColor: Colors.background.surfaceHigh,
+    borderWidth: 1,
+    borderColor: Colors.border.subtle,
+    borderRadius: Radius.full,
+  },
 };
 
 const textVariantColor: Record<Variant, string> = {
-  primary: Colors.text.white,
-  secondary: Colors.text.white,
-  outline: Colors.medical.blue,
-  ghost: Colors.medical.blue,
+  primary: Colors.text.onAccent,
+  secondary: Colors.text.onAccent,
+  outline: Colors.primary.base,
+  ghost: Colors.primary.base,
   danger: Colors.text.white,
+  pill: Colors.text.primary,
 };

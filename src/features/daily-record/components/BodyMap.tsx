@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Ellipse, Line, Path, Rect } from 'react-native-svg';
 import Animated, {
   useAnimatedStyle,
@@ -11,6 +11,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/shared/theme/colors';
 import { Radius, Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
+import { AppImages } from '@/shared/assets/images';
+
+const SILHOUETTE_FILL = Colors.background.surfaceElevated;
+const SILHOUETTE_STROKE = Colors.border.strong;
+const FEATURE_DETAIL = Colors.text.muted;
+const HOT_PRIMARY = Colors.status.error;
+const HOT_SECOND = `${Colors.primary.base}55`;
+const HOT_STROKE_SEL = Colors.status.error;
+const HOT_STROKE_DEF = Colors.primary.base;
 
 export type BodyViewMode = 'frontal' | 'posterior';
 
@@ -109,12 +118,17 @@ interface BodyMapProps {
   onAreaClick: (area: string) => void;
   viewMode?: BodyViewMode;
   height?: number;
+  /** Muestra la ilustración anatómica bajo las zonas táctiles (assets/images/body). */
+  showBodyPhoto?: boolean;
 }
 
-const BodySilhouette: React.FC<{ mode: BodyViewMode }> = ({ mode }) => {
-  const fill = '#e0e7ff';
-  const stroke = '#94a3b8';
-  const strokeW = 0.6;
+const BodySilhouette: React.FC<{ mode: BodyViewMode; outlineOnly?: boolean }> = ({
+  mode,
+  outlineOnly,
+}) => {
+  const fill = outlineOnly ? 'transparent' : SILHOUETTE_FILL;
+  const stroke = SILHOUETTE_STROKE;
+  const strokeW = outlineOnly ? 0.9 : 0.6;
 
   const headD = 'M50,4 C58,4 64,10 64,18 C64,26 58,32 50,32 C42,32 36,26 36,18 C36,10 42,4 50,4 Z';
   const neckD = 'M44,30 L56,30 L56,38 L44,38 Z';
@@ -138,14 +152,14 @@ const BodySilhouette: React.FC<{ mode: BodyViewMode }> = ({ mode }) => {
       <Path d={rightLeg} fill={fill} stroke={stroke} strokeWidth={strokeW} />
       {mode === 'frontal' ? (
         <>
-          <Ellipse cx={44} cy={16} rx={2} ry={1.2} fill="#64748b" />
-          <Ellipse cx={56} cy={16} rx={2} ry={1.2} fill="#64748b" />
-          <Path d="M46,24 Q50,26 54,24" stroke="#64748b" strokeWidth={0.6} fill="none" />
+          <Ellipse cx={44} cy={16} rx={2} ry={1.2} fill={FEATURE_DETAIL} />
+          <Ellipse cx={56} cy={16} rx={2} ry={1.2} fill={FEATURE_DETAIL} />
+          <Path d="M46,24 Q50,26 54,24" stroke={FEATURE_DETAIL} strokeWidth={0.6} fill="none" />
         </>
       ) : (
         <>
-          <Line x1={50} y1={40} x2={50} y2={108} stroke="#94a3b8" strokeWidth={0.5} strokeDasharray="2,2" />
-          <Line x1={36} y1={104} x2={64} y2={104} stroke="#94a3b8" strokeWidth={0.4} strokeDasharray="1.5,2" />
+          <Line x1={50} y1={40} x2={50} y2={108} stroke={FEATURE_DETAIL} strokeWidth={0.5} strokeDasharray="2,2" />
+          <Line x1={36} y1={104} x2={64} y2={104} stroke={FEATURE_DETAIL} strokeWidth={0.4} strokeDasharray="1.5,2" />
         </>
       )}
     </>
@@ -207,6 +221,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
   onAreaClick,
   viewMode = 'frontal',
   height = 480,
+  showBodyPhoto = true,
 }) => {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [pulse, setPulse] = useState<PulseLayer | null>(null);
@@ -270,22 +285,33 @@ export const BodyMap: React.FC<BodyMapProps> = ({
           })
         }
       >
+        {showBodyPhoto ? (
+          <Image
+            accessibilityIgnoresInvertColors
+            source={
+              viewMode === 'frontal' ? AppImages.bodyFrontal : AppImages.bodyPosterior
+            }
+            style={styles.bodyPhoto}
+            resizeMode="contain"
+          />
+        ) : null}
         <Svg
+          style={{ zIndex: 1 }}
           width="100%"
           height="100%"
           viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
           preserveAspectRatio="xMidYMid meet"
         >
-          <BodySilhouette mode={viewMode} />
+          <BodySilhouette mode={viewMode} outlineOnly={showBodyPhoto} />
           {visibleAreas.map((area) => {
             const selected = isSelected(area.id);
             const primary = isPrimary(area.id);
             const fill = primary
-              ? '#dc2626'
+              ? HOT_PRIMARY
               : selected
-                ? 'rgba(239,68,68,0.45)'
-                : 'rgba(59,130,246,0.16)';
-            const stroke = selected ? '#b91c1c' : '#3b82f6';
+                ? HOT_SECOND
+                : `${Colors.primary.base}28`;
+            const stroke = selected ? HOT_STROKE_SEL : HOT_STROKE_DEF;
             const strokeW = primary ? 0.9 : 0.6;
             if (area.shape === 'circle') {
               return (
@@ -382,7 +408,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
                 <Text style={styles.badgeMain}>Principal</Text>
                 <Text style={styles.chipTextPrimary}>{labelMap.get(primaryArea) ?? primaryArea}</Text>
                 <Pressable onPress={() => onAreaClick(primaryArea)} hitSlop={8}>
-                  <Ionicons name="close-circle" size={18} color="#fff" />
+                  <Ionicons name="close-circle" size={18} color={Colors.text.onAccent} />
                 </Pressable>
               </View>
             ) : null}
@@ -391,7 +417,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
                 <Text style={styles.badgeAlso}>También</Text>
                 <Text style={styles.chipText}>{labelMap.get(id) ?? id}</Text>
                 <Pressable onPress={() => onAreaClick(id)} hitSlop={8}>
-                  <Ionicons name="close-circle" size={18} color="#b91c1c" />
+                  <Ionicons name="close-circle" size={18} color={Colors.status.error} />
                 </Pressable>
               </View>
             ))}
@@ -407,25 +433,30 @@ export const BodyMap: React.FC<BodyMapProps> = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surface,
     borderRadius: Radius.xl,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border.light,
+    borderColor: Colors.border.subtle,
   },
   canvas: {
     width: '100%',
-    backgroundColor: '#f8fafc',
+    backgroundColor: Colors.background.base,
     borderRadius: Radius.lg,
     overflow: 'hidden',
     position: 'relative',
   },
+  bodyPhoto: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.72,
+    zIndex: 0,
+  },
   pulse: {
     position: 'absolute',
     borderRadius: 999,
-    backgroundColor: 'rgba(220,38,38,0.55)',
+    backgroundColor: 'rgba(255, 100, 121, 0.45)',
     borderWidth: 2,
-    borderColor: '#dc2626',
+    borderColor: Colors.status.error,
   },
   tooltip: {
     position: 'absolute',
@@ -436,18 +467,18 @@ const styles = StyleSheet.create({
     maxWidth: 140,
   },
   tooltipText: {
-    color: '#fff',
+    color: Colors.text.primary,
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
   selectedBox: {
     marginTop: Spacing.base,
-    backgroundColor: '#fff5f5',
+    backgroundColor: 'rgba(255, 100, 121, 0.1)',
     borderRadius: Radius.lg,
     padding: Spacing.sm,
     borderWidth: 1,
-    borderColor: '#fecaca',
+    borderColor: Colors.border.strong,
   },
   selectedHeader: {
     flexDirection: 'row',
@@ -455,7 +486,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     gap: 6,
   },
-  dotRed: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#ef4444' },
+  dotRed: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.status.error },
   selectedTitle: {
     flex: 1,
     fontSize: Typography.fontSize.sm,
@@ -463,31 +494,31 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
   },
   countBadge: {
-    backgroundColor: '#fee2e2',
+    backgroundColor: 'rgba(255, 100, 121, 0.18)',
     paddingHorizontal: 10,
     paddingVertical: 2,
     borderRadius: 999,
   },
-  countText: { color: '#b91c1c', fontWeight: '700', fontSize: 12 },
+  countText: { color: Colors.status.error, fontWeight: '700', fontSize: 12 },
   chipsRow: { flexDirection: 'row', gap: 6 },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#fee2e2',
+    backgroundColor: Colors.background.surfaceHigh,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
     marginRight: 6,
   },
   chipPrimary: {
-    backgroundColor: '#dc2626',
+    backgroundColor: Colors.status.error,
   },
-  chipText: { color: '#991b1b', fontWeight: '600', fontSize: 12 },
-  chipTextPrimary: { color: '#fff', fontWeight: '700', fontSize: 12 },
+  chipText: { color: Colors.text.secondary, fontWeight: '600', fontSize: 12 },
+  chipTextPrimary: { color: Colors.text.onAccent, fontWeight: '700', fontSize: 12 },
   badgeMain: {
-    backgroundColor: '#fff',
-    color: '#dc2626',
+    backgroundColor: Colors.background.surfaceElevated,
+    color: Colors.status.error,
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 999,
@@ -496,8 +527,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   badgeAlso: {
-    backgroundColor: '#fecaca',
-    color: '#7f1d1d',
+    backgroundColor: Colors.primary.soft,
+    color: Colors.primary.deep,
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 999,

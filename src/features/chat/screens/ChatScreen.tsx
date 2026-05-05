@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -10,16 +10,20 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import httpClient from '@/shared/services/http/apiClient';
 import type { ChatChannel, ChatMessage } from '@/shared/types/domain';
+import { useAuthStore } from '@/features/auth/store/auth.store';
+import { useChatStore } from '@/features/chat/store/chat.store';
 import { Colors } from '@/shared/theme/colors';
 import { Radius, Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
 
-const channels: { id: ChatChannel; label: string; icon: React.ComponentProps<typeof Ionicons>['name'] }[] = [
+const channels: {
+  id: ChatChannel;
+  label: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+}[] = [
   { id: 'ai', label: 'AlivIA IA', icon: 'sparkles' },
   { id: 'team', label: 'Equipo Médico', icon: 'medkit' },
 ];
@@ -27,45 +31,49 @@ const channels: { id: ChatChannel; label: string; icon: React.ComponentProps<typ
 export const ChatScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ChatChannel>('ai');
   const [draft, setDraft] = useState('');
-  const queryClient = useQueryClient();
+  const [sending, setSending] = useState(false);
 
-  const { data, isLoading } = useQuery<ChatMessage[]>({
-    queryKey: ['chat-messages'],
-    queryFn: async () => {
-      const res = await httpClient.get('/chat/messages');
-      return res.data;
-    },
-  });
+  const user = useAuthStore((s) => s.user);
+  const messages = useChatStore((s) => s.messages);
+  const hydrated = useChatStore((s) => s.hydrated);
+  const hydrate = useChatStore((s) => s.hydrate);
+  const send = useChatStore((s) => s.send);
 
-  const sendMutation = useMutation({
-    mutationFn: async (body: string) => {
-      const res = await httpClient.post('/chat/messages', {
-        channel: activeTab,
-        body,
-      });
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat-messages'] });
-    },
-  });
+  useEffect(() => {
+    if (!hydrated) hydrate().catch(() => {});
+  }, [hydrate, hydrated]);
 
-  const messages = (data ?? []).filter((m) => m.channel === activeTab);
+  const filtered = messages.filter((m) => m.channel === activeTab);
 
-  const handleSend = () => {
+  const displayName =
+    user?.firstName && user?.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user?.email ?? 'Paciente';
+
+  const handleSend = async () => {
     const text = draft.trim();
     if (!text) return;
     setDraft('');
-    sendMutation.mutate(text);
+    setSending(true);
+    try {
+      await send(activeTab, text, { name: displayName, isPro: false });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
-        <Text style={styles.title}>Chat</Text>
-        <Text style={styles.subtitle}>
-          Conversa con la IA o con tu equipo médico de forma separada.
-        </Text>
+        <View style={styles.headerAvatar}>
+          <Ionicons name="sparkles" size={22} color={Colors.text.onAccent} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>AlivIA</Text>
+          <Text style={styles.subtitle}>
+            Chat demo local: la IA responde con plantillas; el equipo médico es simulado.
+          </Text>
+        </View>
       </View>
 
       <View style={styles.tabs}>
@@ -80,11 +88,9 @@ export const ChatScreen: React.FC = () => {
               <Ionicons
                 name={c.icon}
                 size={16}
-                color={active ? Colors.text.white : Colors.text.primary}
+                color={active ? Colors.text.onAccent : Colors.text.primary}
               />
-              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
-                {c.label}
-              </Text>
+              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{c.label}</Text>
             </Pressable>
           );
         })}
@@ -95,13 +101,13 @@ export const ChatScreen: React.FC = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={80}
       >
-        {isLoading ? (
+        {!hydrated ? (
           <View style={styles.center}>
-            <ActivityIndicator color={Colors.medical.blue} />
+            <ActivityIndicator color={Colors.primary.base} />
           </View>
         ) : (
           <FlatList
-            data={messages}
+            data={filtered}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.list}
             renderItem={({ item }) => <ChatBubble message={item} />}
@@ -127,14 +133,15 @@ export const ChatScreen: React.FC = () => {
                 ? 'Escríbele a AlivIA...'
                 : 'Escríbele a tu equipo médico...'
             }
+            placeholderTextColor={Colors.text.muted}
             multiline
           />
           <Pressable
             onPress={handleSend}
             style={[styles.sendBtn, !draft.trim() && styles.sendBtnDisabled]}
-            disabled={!draft.trim() || sendMutation.isPending}
+            disabled={!draft.trim() || sending}
           >
-            <Ionicons name="send" size={18} color={Colors.text.white} />
+            <Ionicons name="send" size={18} color={Colors.text.onAccent} />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -153,9 +160,7 @@ const ChatBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
           message.channel === 'ai' && !isMe && styles.bubbleAi,
         ]}
       >
-        {!isMe ? (
-          <Text style={styles.author}>{message.authorName}</Text>
-        ) : null}
+        {!isMe ? <Text style={styles.author}>{message.authorName}</Text> : null}
         <Text style={[styles.body, isMe && styles.bodyMe]}>{message.body}</Text>
       </View>
     </View>
@@ -163,11 +168,22 @@ const ChatBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background.light },
+  safe: { flex: 1, backgroundColor: Colors.background.base },
   flex: { flex: 1 },
   header: {
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.base,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  headerAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.primary.soft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: { ...Typography.styles.h2, color: Colors.text.primary },
   subtitle: { color: Colors.text.muted, marginBottom: Spacing.sm },
@@ -186,15 +202,15 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: Radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border.light,
-    backgroundColor: Colors.background.white,
+    borderColor: Colors.border.subtle,
+    backgroundColor: Colors.background.surface,
   },
   tabActive: {
-    backgroundColor: Colors.medical.blue,
-    borderColor: Colors.medical.blue,
+    backgroundColor: Colors.primary.base,
+    borderColor: Colors.primary.base,
   },
   tabLabel: { color: Colors.text.primary, fontWeight: '700' },
-  tabLabelActive: { color: Colors.text.white },
+  tabLabelActive: { color: Colors.text.onAccent },
   list: { padding: Spacing.base, gap: Spacing.sm, flexGrow: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { padding: Spacing.lg, alignItems: 'center' },
@@ -206,25 +222,25 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     borderRadius: Radius.lg,
   },
-  bubbleMe: { backgroundColor: Colors.medical.blue },
-  bubbleOther: { backgroundColor: Colors.background.white },
-  bubbleAi: { backgroundColor: '#ede9fe' },
+  bubbleMe: { backgroundColor: Colors.primary.deep },
+  bubbleOther: { backgroundColor: Colors.background.surfaceElevated },
+  bubbleAi: { backgroundColor: Colors.accentSoft },
   author: {
     fontWeight: '700',
     fontSize: 12,
     marginBottom: 2,
-    color: Colors.text.primary,
+    color: Colors.text.secondary,
   },
   body: { color: Colors.text.primary, fontSize: 14, lineHeight: 19 },
-  bodyMe: { color: Colors.text.white },
+  bodyMe: { color: Colors.text.onAccent },
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 8,
     padding: Spacing.base,
     borderTopWidth: 1,
-    borderTopColor: Colors.border.light,
-    backgroundColor: Colors.background.white,
+    borderTopColor: Colors.border.subtle,
+    backgroundColor: Colors.background.surface,
   },
   input: {
     flex: 1,
@@ -234,9 +250,9 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
     borderRadius: Radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border.light,
+    borderColor: Colors.border.subtle,
     color: Colors.text.primary,
-    backgroundColor: Colors.background.light,
+    backgroundColor: Colors.background.surfaceHigh,
   },
   sendBtn: {
     width: 40,
@@ -244,7 +260,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.medical.blue,
+    backgroundColor: Colors.primary.base,
   },
   sendBtnDisabled: { opacity: 0.5 },
 });

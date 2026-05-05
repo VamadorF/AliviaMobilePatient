@@ -8,6 +8,7 @@ import { useDailyRecordData } from '@/features/daily-record/context/DailyRecordC
 import { FacesPainScale } from '@/features/daily-record/components/FacesPainScale';
 import { CRITICAL_PAIN_THRESHOLD } from '@/app/config/constants';
 import { Colors } from '@/shared/theme/colors';
+import { PainScale } from '@/shared/theme/painScale';
 import { Radius, Spacing } from '@/shared/theme/spacing';
 import type { DailyRecordStackParamList } from '@/shared/types/navigation';
 
@@ -15,30 +16,30 @@ const empathyMessage = (value: number): { text: string; color: string } => {
   if (value <= 0) {
     return {
       text: 'Que bien que hoy no sientas dolor. Sigue cuidándote igual.',
-      color: '#3b82f6',
+      color: PainScale.none,
     };
   }
   if (value <= 3) {
     return {
       text: 'Aunque sea leve, cuenta. Gracias por escuchar a tu cuerpo.',
-      color: '#22c55e',
+      color: PainScale.mild,
     };
   }
   if (value <= 6) {
     return {
       text: 'Un dolor moderado es agotador. Estamos contigo en este registro.',
-      color: '#f59e0b',
+      color: PainScale.moderate,
     };
   }
   if (value <= 9) {
     return {
       text: 'Un dolor así es muy duro. Reconocerlo ya es un paso importante.',
-      color: '#ef4444',
+      color: PainScale.severe,
     };
   }
   return {
     text: 'Estamos contigo. Si el dolor es insoportable, busca ayuda médica ahora.',
-    color: '#7f1d1d',
+    color: PainScale.worst,
   };
 };
 
@@ -87,7 +88,7 @@ export const IntensityScreen: React.FC = () => {
       {isCritical ? (
         <View style={styles.criticalBox}>
           <View style={styles.criticalRow}>
-            <Ionicons name="alert-circle" size={20} color="#7f1d1d" />
+            <Ionicons name="alert-circle" size={20} color={Colors.status.error} />
             <Text style={styles.criticalTitle}>Detectamos dolor muy alto</Text>
           </View>
           <Text style={styles.criticalText}>
@@ -119,9 +120,9 @@ const styles = StyleSheet.create({
     marginTop: Spacing.base,
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: '#fee2e2',
+    backgroundColor: 'rgba(255, 100, 121, 0.12)',
     borderWidth: 1,
-    borderColor: '#fecaca',
+    borderColor: Colors.status.error,
   },
   criticalRow: {
     flexDirection: 'row',
@@ -130,11 +131,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   criticalTitle: {
-    color: '#7f1d1d',
+    color: Colors.status.error,
     fontWeight: '800',
     fontSize: 15,
   },
-  criticalText: { color: '#7f1d1d', fontSize: 13, lineHeight: 18 },
+  criticalText: { color: Colors.text.secondary, fontSize: 13, lineHeight: 18 },
 });
 
 export default IntensityScreen;

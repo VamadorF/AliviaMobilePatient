@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { Colors } from '@/shared/theme/colors';
-import { Radius, Shadow, Spacing } from '@/shared/theme/spacing';
+import { Radius, Spacing } from '@/shared/theme/spacing';
 
 interface CardProps {
   children: ReactNode;
@@ -9,6 +9,10 @@ interface CardProps {
   onPress?: () => void;
   padded?: boolean;
   background?: string;
+  /** Si true (default), agrega un borde sutil para separar del fondo. */
+  bordered?: boolean;
+  /** Variante visual. `elevated` usa surfaceElevated. */
+  variant?: 'flat' | 'elevated' | 'high';
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -16,13 +20,24 @@ export const Card: React.FC<CardProps> = ({
   style,
   onPress,
   padded = true,
-  background = Colors.background.white,
+  background,
+  bordered = true,
+  variant = 'flat',
 }) => {
+  const bg =
+    background ??
+    (variant === 'elevated'
+      ? Colors.background.surfaceElevated
+      : variant === 'high'
+        ? Colors.background.surfaceHigh
+        : Colors.background.surface);
+
   const inner: ViewStyle = {
-    backgroundColor: background,
+    backgroundColor: bg,
     padding: padded ? Spacing.base : 0,
     borderRadius: Radius.xl,
-    ...Shadow.md,
+    borderWidth: bordered ? StyleSheet.hairlineWidth : 0,
+    borderColor: Colors.border.subtle,
     ...style,
   };
 
@@ -41,5 +56,5 @@ export const Card: React.FC<CardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  pressed: { opacity: 0.95, transform: [{ scale: 0.99 }] },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
 });

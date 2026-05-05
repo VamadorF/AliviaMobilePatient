@@ -20,21 +20,29 @@ interface ScreenProps {
   contentStyle?: ViewStyle;
   edges?: Edge[];
   keyboardAware?: boolean;
+  /**
+   * Extra padding al fondo del contenido para compensar el tab bar.
+   * Por defecto 96 (suficiente para tab bar + insets típicos).
+   */
+  bottomInset?: number;
 }
 
 export const Screen: React.FC<ScreenProps> = ({
   children,
   scroll = false,
   padded = true,
-  background = Colors.background.light,
+  background = Colors.background.base,
   style,
   contentStyle,
-  edges = ['top', 'left', 'right', 'bottom'],
+  edges = ['top', 'left', 'right'],
   keyboardAware = false,
+  bottomInset = 96,
 }) => {
   const innerStyle: ViewStyle = {
     flex: scroll ? undefined : 1,
-    padding: padded ? Spacing.base : 0,
+    paddingHorizontal: padded ? Spacing.base : 0,
+    paddingTop: padded ? Spacing.base : 0,
+    paddingBottom: scroll ? bottomInset : padded ? Spacing.base : 0,
     ...contentStyle,
   };
 
@@ -70,13 +78,7 @@ export const Screen: React.FC<ScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-  },
-  flex: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
+  safe: { flex: 1 },
+  flex: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
 });

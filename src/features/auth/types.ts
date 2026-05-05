@@ -6,6 +6,8 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   role: UserRole | string;
+  /** Solo demo / futuro backend. */
+  memberSince?: string;
   specialty?: string;
   hasProfile?: boolean;
   patientProfile?: {

@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/shared/theme/colors';
+import { PainScale } from '@/shared/theme/painScale';
 import { Radius, Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
 
@@ -23,12 +24,12 @@ interface FaceDef {
 }
 
 const faces: FaceDef[] = [
-  { value: 0, label: 'Sin dolor', color: '#3b82f6', icon: 'sentiment-very-satisfied' },
-  { value: 2, label: 'Apenas duele', color: '#22c55e', icon: 'sentiment-satisfied' },
-  { value: 4, label: 'Duele un poco más', color: '#facc15', icon: 'sentiment-neutral' },
-  { value: 6, label: 'Duele bastante', color: '#fb923c', icon: 'sentiment-dissatisfied' },
-  { value: 8, label: 'Duele mucho', color: '#f97316', icon: 'sentiment-very-dissatisfied' },
-  { value: 10, label: 'Peor dolor imaginable', color: '#dc2626', icon: 'sick' },
+  { value: 0, label: 'Sin dolor', color: PainScale.none, icon: 'sentiment-very-satisfied' },
+  { value: 2, label: 'Apenas duele', color: PainScale.mild, icon: 'sentiment-satisfied' },
+  { value: 4, label: 'Duele un poco más', color: PainScale.moderate, icon: 'sentiment-neutral' },
+  { value: 6, label: 'Duele bastante', color: PainScale.severe, icon: 'sentiment-dissatisfied' },
+  { value: 8, label: 'Duele mucho', color: PainScale.verySevere, icon: 'sentiment-very-dissatisfied' },
+  { value: 10, label: 'Peor dolor imaginable', color: PainScale.worst, icon: 'sick' },
 ];
 
 interface IaspBand {
@@ -39,11 +40,11 @@ interface IaspBand {
 }
 
 const iaspBands: IaspBand[] = [
-  { range: [0, 0], label: 'Sin dolor', color: '#3b82f6', description: 'No hay dolor presente' },
-  { range: [1, 3], label: 'Dolor leve', color: '#22c55e', description: 'Es molesto, pero puedes continuar tu día' },
-  { range: [4, 6], label: 'Dolor moderado', color: '#f59e0b', description: 'Interfiere con tus actividades habituales' },
-  { range: [7, 9], label: 'Dolor severo', color: '#ef4444', description: 'Limita seriamente lo que puedes hacer' },
-  { range: [10, 10], label: 'El peor dolor imaginable', color: '#7f1d1d', description: 'No puedes pensar en otra cosa' },
+  { range: [0, 0], label: 'Sin dolor', color: PainScale.none, description: 'No hay dolor presente' },
+  { range: [1, 3], label: 'Dolor leve', color: PainScale.mild, description: 'Es molesto, pero puedes continuar tu día' },
+  { range: [4, 6], label: 'Dolor moderado', color: PainScale.moderate, description: 'Interfiere con tus actividades habituales' },
+  { range: [7, 9], label: 'Dolor severo', color: PainScale.severe, description: 'Limita seriamente lo que puedes hacer' },
+  { range: [10, 10], label: 'El peor dolor imaginable', color: PainScale.worst, description: 'No puedes pensar en otra cosa' },
 ];
 
 const getIaspBand = (val: number): IaspBand => {
@@ -99,15 +100,15 @@ export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
               style={[
                 styles.nrsCell,
                 {
-                  backgroundColor: selected ? cellBand.color : Colors.background.white,
-                  borderColor: selected ? cellBand.color : Colors.border.light,
+                  backgroundColor: selected ? cellBand.color : PainScale.cellIdle,
+                  borderColor: selected ? cellBand.color : PainScale.cellBorderIdle,
                 },
               ]}
             >
               <Text
                 style={[
                   styles.nrsText,
-                  { color: selected ? Colors.text.white : Colors.text.primary },
+                  { color: selected ? Colors.text.onAccent : Colors.text.primary },
                 ]}
               >
                 {n}
@@ -134,8 +135,8 @@ export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
                 styles.faceCard,
                 {
                   width: faceSize + 16,
-                  backgroundColor: selected ? face.color : Colors.background.white,
-                  borderColor: selected ? face.color : Colors.border.light,
+                  backgroundColor: selected ? face.color : PainScale.cellIdle,
+                  borderColor: selected ? face.color : PainScale.cellBorderIdle,
                 },
               ]}
             >
@@ -146,20 +147,20 @@ export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
                     width: faceSize,
                     height: faceSize,
                     borderRadius: faceSize / 2,
-                    backgroundColor: selected ? Colors.background.white : face.color,
+                    backgroundColor: selected ? Colors.background.surfaceElevated : face.color,
                   },
                 ]}
               >
                 <MaterialIcons
                   name={face.icon}
                   size={faceSize * 0.7}
-                  color={selected ? face.color : '#1f2937'}
+                  color={selected ? face.color : PainScale.faceIconIdle}
                 />
               </View>
               <Text
                 style={[
                   styles.faceValue,
-                  { color: selected ? Colors.text.white : Colors.text.primary },
+                  { color: selected ? Colors.text.onAccent : Colors.text.primary },
                 ]}
               >
                 {face.value}
@@ -167,7 +168,7 @@ export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
               <Text
                 style={[
                   styles.faceLabel,
-                  { color: selected ? 'rgba(255,255,255,0.95)' : Colors.text.muted },
+                  { color: selected ? 'rgba(11,15,26,0.75)' : Colors.text.muted },
                 ]}
                 numberOfLines={2}
               >
@@ -180,7 +181,7 @@ export const FacesPainScale: React.FC<FacesPainScaleProps> = ({
 
       <View style={styles.gradientBox}>
         <LinearGradient
-          colors={['#3b82f6', '#22c55e', '#facc15', '#f97316', '#ef4444', '#7f1d1d']}
+          colors={[...PainScale.gradient]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.gradientBar}

@@ -7,17 +7,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { WizardLayout } from '@/shared/components';
 import { HealthAssistance } from '@/features/daily-record/components/HealthAssistance';
 import { useDailyRecordData } from '@/features/daily-record/context/DailyRecordContext';
-import httpClient from '@/shared/services/http/apiClient';
+import { useDailyRecordsStore } from '@/features/daily-record/store/dailyRecords.store';
 import { Colors } from '@/shared/theme/colors';
 import { Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
 import type { DailyRecordStackParamList } from '@/shared/types/navigation';
 
 const categoryColors: Record<string, [string, string]> = {
-  autocuidado: ['#34d399', '#047857'],
-  'cesfam-ccr': ['#60a5fa', '#1d4ed8'],
-  'sapu-sar': ['#fbbf24', '#d97706'],
-  urgencia: ['#fb7185', '#b91c1c'],
+  autocuidado: Colors.gradient.primary,
+  'cesfam-ccr': Colors.gradient.sky,
+  'sapu-sar': Colors.gradient.gold,
+  urgencia: Colors.gradient.coral,
 };
 
 const categoryLabels: Record<string, string> = {
@@ -31,27 +31,27 @@ export const RecommendationScreen: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<DailyRecordStackParamList>>();
   const { data, updateData } = useDailyRecordData();
+  const computeRecommendation = useDailyRecordsStore((s) => s.computeRecommendation);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    const fetch = async () => {
+    const run = async () => {
       setLoading(true);
-      try {
-        const res = await httpClient.post('/patient/pain-record/recommendation', {
-          painIntensity: data.painIntensity,
-          functionalImpactPhysical: data.functionalImpactPhysical,
-        });
-        if (!cancelled) updateData({ recommendation: res.data });
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+      await new Promise((r) => setTimeout(r, 400));
+      if (cancelled) return;
+      const rec = computeRecommendation(
+        data.painIntensity,
+        data.functionalImpactPhysical,
+      );
+      updateData({ recommendation: rec });
+      setLoading(false);
     };
-    fetch();
+    run();
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- valores del wizard al montar este paso
   }, []);
 
   const moodPattern: 'positive' | 'neutral' | 'negative' =
@@ -74,7 +74,7 @@ export const RecommendationScreen: React.FC = () => {
     >
       {loading || !data.recommendation ? (
         <View style={styles.loading}>
-          <ActivityIndicator size="large" color={Colors.medical.blue} />
+          <ActivityIndicator size="large" color={Colors.primary.base} />
           <Text style={styles.loadingText}>Calculando recomendación...</Text>
         </View>
       ) : (
@@ -83,12 +83,14 @@ export const RecommendationScreen: React.FC = () => {
           style={styles.recommendCard}
         >
           <View style={styles.headerRow}>
-            <Ionicons name="medical" size={26} color={Colors.text.white} />
-            <Text style={styles.recommendTitle}>
+            <Ionicons name="medical" size={26} color={Colors.text.onAccent} />
+            <Text style={[styles.recommendTitle, { color: Colors.text.onAccent }]}>
               {categoryLabels[data.recommendation.category] ?? 'Recomendación'}
             </Text>
           </View>
-          <Text style={styles.recommendMessage}>{data.recommendation.message}</Text>
+          <Text style={[styles.recommendMessage, { color: 'rgba(11,15,26,0.88)' }]}>
+            {data.recommendation.message}
+          </Text>
         </LinearGradient>
       )}
 
@@ -109,9 +111,8 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: Spacing.sm },
   recommendTitle: {
     ...Typography.styles.h3,
-    color: Colors.text.white,
   },
-  recommendMessage: { color: Colors.text.white, fontSize: 16, lineHeight: 22 },
+  recommendMessage: { fontSize: 16, lineHeight: 22 },
 });
 
 export default RecommendationScreen;

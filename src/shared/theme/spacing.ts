@@ -14,43 +14,48 @@ export const Spacing = {
 
 export const Radius = {
   none: 0,
-  sm: 4,
-  md: 8,
-  lg: 12,
-  xl: 16,
-  '2xl': 20,
-  '3xl': 24,
+  sm: 6,
+  md: 10,
+  lg: 14,
+  xl: 18,
+  '2xl': 22,
+  '3xl': 28,
   full: 9999,
 } as const;
 
+/**
+ * Sombras adaptadas al modo oscuro: en lugar de oscurecer (no se nota
+ * sobre un fondo casi negro) usamos pseudo-glow + elevación nativa para
+ * que las tarjetas tengan separación visual.
+ */
 export const Shadow = {
   sm: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOpacity: 0.45,
+    shadowRadius: 3,
+    elevation: 2,
   },
   md: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 10,
+    elevation: 4,
   },
   lg: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.6,
+    shadowRadius: 18,
+    elevation: 8,
   },
   xl: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.65,
+    shadowRadius: 26,
+    elevation: 12,
   },
 } as const;
 

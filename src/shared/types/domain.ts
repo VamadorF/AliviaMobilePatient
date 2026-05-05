@@ -121,7 +121,5 @@ export interface VoiceSpace {
   scheduledFor: string | null;
   isLive: boolean;
   participants: number;
-  /** Proveedor WebRTC sincrónico. */
-  provider: 'agora' | 'livekit';
   channelName: string;
 }

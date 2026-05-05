@@ -31,8 +31,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       await secureStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
       await localStorage.setJSON(STORAGE_KEYS.AUTH_USER, user);
       set({ user, token, isAuthenticated: true, isLoading: false, error: null });
-    } catch (err: any) {
-      const message = err?.response?.data?.error ?? 'Error al iniciar sesión';
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al iniciar sesión';
       set({ isLoading: false, error: message });
       throw new Error(message);
     }
@@ -45,8 +45,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       await secureStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
       await localStorage.setJSON(STORAGE_KEYS.AUTH_USER, user);
       set({ user, token, isAuthenticated: true, isLoading: false, error: null });
-    } catch (err: any) {
-      const message = err?.response?.data?.error ?? 'Error al registrarse';
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al registrarse';
       set({ isLoading: false, error: message });
       throw new Error(message);
     }

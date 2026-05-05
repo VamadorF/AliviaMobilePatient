@@ -1,6 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -14,23 +13,17 @@ import {
   StreakBadges,
   type StreakInfo,
 } from '@/shared/components';
-import httpClient from '@/shared/services/http/apiClient';
+import { useDailyRecordsStore } from '@/features/daily-record/store/dailyRecords.store';
 import { Colors } from '@/shared/theme/colors';
 import { Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
-import type { DailyRecord, DailyRecordStats } from '@/shared/types/domain';
-
-interface HistoryResponse {
-  records: DailyRecord[];
-  stats: DailyRecordStats;
-}
 
 type Range = '7d' | '30d' | 'all';
 
 const dayTypeColor = (t?: 'good' | 'neutral' | 'bad') => {
-  if (t === 'good') return '#10b981';
-  if (t === 'bad') return '#ef4444';
-  return '#f59e0b';
+  if (t === 'good') return Colors.status.success;
+  if (t === 'bad') return Colors.status.error;
+  return Colors.status.warning;
 };
 
 const dayTypeLabel = (t?: 'good' | 'neutral' | 'bad') => {
@@ -43,15 +36,15 @@ export const HistoryScreen: React.FC = () => {
   const [range, setRange] = useState<Range>('7d');
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
 
-  const { data, isLoading } = useQuery<HistoryResponse>({
-    queryKey: ['patient-daily-records'],
-    queryFn: async () => {
-      const res = await httpClient.get('/patient/daily-records');
-      return res.data;
-    },
-  });
+  const records = useDailyRecordsStore((s) => s.records);
+  const hydrated = useDailyRecordsStore((s) => s.hydrated);
+  const hydrate = useDailyRecordsStore((s) => s.hydrate);
 
-  const records = useMemo(() => data?.records ?? [], [data?.records]);
+  useEffect(() => {
+    if (!hydrated) hydrate().catch(() => {});
+  }, [hydrate, hydrated]);
+
+  const stats = useDailyRecordsStore.getState().getStats();
 
   const filtered = useMemo(() => {
     if (range === 'all') return records;
@@ -90,11 +83,11 @@ export const HistoryScreen: React.FC = () => {
     return {
       current,
       best,
-      totalRecords: data?.stats.totalRecords ?? records.length,
+      totalRecords: stats.totalRecords ?? records.length,
     };
-  }, [records, data?.stats.totalRecords]);
+  }, [records, stats.totalRecords]);
 
-  if (isLoading) {
+  if (!hydrated) {
     return (
       <Screen edges={['top', 'left', 'right']}>
         <ActivityIndicator size="large" color={Colors.medical.blue} />

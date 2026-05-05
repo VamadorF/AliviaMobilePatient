@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useQuery } from '@tanstack/react-query';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -13,12 +14,14 @@ import {
   StreakBadges,
   type StreakInfo,
 } from '@/shared/components';
-import httpClient from '@/shared/services/http/apiClient';
-import type { DashboardData } from '@/shared/types/domain';
+import { mockDashboard } from '@/shared/services/demo';
+import type { ChartDataPoint } from '@/shared/types/domain';
 import { useAuthStore } from '@/features/auth/store/auth.store';
+import { useDailyRecordsStore } from '@/features/daily-record/store/dailyRecords.store';
 import { Colors } from '@/shared/theme/colors';
 import { Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
+import type { MainTabsParamList, RootMainStackParamList } from '@/shared/types/navigation';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -45,30 +48,32 @@ const StatCard: React.FC<{
 );
 
 export const DashboardScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation();
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
+  const records = useDailyRecordsStore((s) => s.records);
+  const hydrated = useDailyRecordsStore((s) => s.hydrated);
+  const hydrate = useDailyRecordsStore((s) => s.hydrate);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const { data, isLoading, refetch } = useQuery<DashboardData>({
-    queryKey: ['patient-dashboard'],
-    queryFn: async () => {
-      const res = await httpClient.get('/patient/dashboard');
-      return res.data;
-    },
-  });
+  useEffect(() => {
+    if (!hydrated) hydrate().catch(() => {});
+  }, [hydrate, hydrated]);
 
-  if (isLoading) {
-    return (
-      <Screen edges={['top', 'left', 'right']}>
-        <ActivityIndicator size="large" color={Colors.medical.blue} />
-      </Screen>
+  const stats = useDailyRecordsStore.getState().getStats();
+
+  const chartData: ChartDataPoint[] = useMemo(() => {
+    const sorted = [...records].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     );
-  }
+    const points: ChartDataPoint[] = sorted.map((r) => ({
+      date: r.date.slice(0, 10),
+      painIntensity: r.painIntensity,
+      dayType: r.dayType ?? 'neutral',
+    }));
+    return points.length >= 3 ? points : mockDashboard.chartData;
+  }, [records]);
 
-  const stats = data?.stats;
-  const chartData = data?.chartData ?? [];
-
-  const streak: StreakInfo = (() => {
+  const streak: StreakInfo = useMemo(() => {
     const sorted = [...chartData].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     );
@@ -90,12 +95,12 @@ export const DashboardScreen: React.FC = () => {
     return {
       current,
       best,
-      totalRecords: stats?.totalRecords ?? sorted.length,
+      totalRecords: stats.totalRecords,
     };
-  })();
+  }, [chartData, stats.totalRecords]);
 
   const aiSuggestion = (() => {
-    const avg = stats?.averagePain ?? 0;
+    const avg = stats.averagePain ?? 0;
     if (avg >= 7) {
       return 'Tu dolor ha estado alto. Intenta un descanso pautado y consulta a tu equipo de salud si no cede.';
     }
@@ -105,6 +110,31 @@ export const DashboardScreen: React.FC = () => {
     return 'Vas bien. Mantén tus rutinas y recuerda hidratarte y moverte un poco cada día.';
   })();
 
+  const openDailyRecord = () => {
+    const tabNav = navigation.getParent() as BottomTabNavigationProp<MainTabsParamList> | undefined;
+    const mainNav = tabNav?.getParent() as NativeStackNavigationProp<RootMainStackParamList> | undefined;
+    mainNav?.navigate('DailyRecord', { screen: 'Location' });
+  };
+
+  const openMedications = () => {
+    const tabNav = navigation.getParent() as BottomTabNavigationProp<MainTabsParamList> | undefined;
+    tabNav?.navigate('Dashboard', { screen: 'Medications' });
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await hydrate().catch(() => {});
+    setRefreshing(false);
+  };
+
+  if (!hydrated) {
+    return (
+      <Screen edges={['top', 'left', 'right']}>
+        <ActivityIndicator size="large" color={Colors.primary.base} />
+      </Screen>
+    );
+  }
+
   return (
     <Screen scroll edges={['top', 'left', 'right']}>
       <View style={styles.headerRow}>
@@ -112,13 +142,13 @@ export const DashboardScreen: React.FC = () => {
           <Text style={styles.greeting}>{getGreeting(new Date(), user?.firstName)}</Text>
           <Text style={styles.subtitle}>¿Cómo te sientes hoy?</Text>
         </View>
-        <Pressable onPress={logout} hitSlop={12} style={styles.logoutBtn}>
-          <Ionicons name="log-out-outline" size={22} color={Colors.text.primary} />
+        <Pressable onPress={() => onRefresh()} hitSlop={12} style={styles.refreshBtn}>
+          <Ionicons name="refresh" size={22} color={Colors.text.primary} />
         </Pressable>
       </View>
 
       <LinearGradient
-        colors={['#a78bfa', '#7c3aed']}
+        colors={Colors.gradient.violet}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.aiCard}
@@ -132,23 +162,19 @@ export const DashboardScreen: React.FC = () => {
         <Text style={styles.aiBody}>{aiSuggestion}</Text>
       </LinearGradient>
 
-      <Pressable
-        onPress={() =>
-          navigation.navigate('DailyRecord', { screen: 'Location' })
-        }
-      >
+      <Pressable onPress={openDailyRecord}>
         <LinearGradient
-          colors={[Colors.medical.blue, Colors.medical.purple]}
+          colors={Colors.gradient.primary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}
         >
           <View style={{ flex: 1 }}>
-            <Text style={styles.heroTitle}>¿Cómo te sientes hoy?</Text>
-            <Text style={styles.heroSubtitle}>Toca aquí para contarnos</Text>
+            <Text style={styles.heroTitle}>Actualizar tu bienestar</Text>
+            <Text style={styles.heroSubtitle}>Toca aquí para registrar tu día</Text>
           </View>
           <View style={styles.heroIconBox}>
-            <Ionicons name="add-circle" size={36} color={Colors.text.white} />
+            <Ionicons name="add-circle" size={36} color={Colors.text.onAccent} />
           </View>
         </LinearGradient>
       </Pressable>
@@ -157,28 +183,28 @@ export const DashboardScreen: React.FC = () => {
         <StatCard
           icon="trending-up"
           label="¿Cómo va tu dolor?"
-          value={`${stats?.averagePain.toFixed(1) ?? '0'} / 10`}
-          colors={['#60a5fa', '#1d4ed8']}
+          value={`${stats.averagePain.toFixed(1)} / 10`}
+          colors={Colors.gradient.sky}
         />
         <StatCard
           icon="happy"
           label="Días que te sentiste bien"
-          value={`${stats?.goodDays ?? 0}`}
-          colors={['#34d399', '#047857']}
+          value={`${stats.goodDays}`}
+          colors={Colors.gradient.primary}
         />
         <StatCard
           icon="checkmark-done"
           label="¿Sigues tu plan?"
-          value={`${(stats?.adherence ?? 0).toFixed(0)}%`}
-          colors={['#a78bfa', '#5b21b6']}
+          value={`${stats.adherence.toFixed(0)}%`}
+          colors={Colors.gradient.violet}
         />
       </View>
 
       <Card>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>¿Cómo ha cambiado tu dolor esta semana?</Text>
-          <Pressable onPress={() => refetch()}>
-            <Ionicons name="refresh" size={18} color={Colors.medical.blue} />
+          <Text style={styles.cardTitle}>Tu resumen · dolor esta semana</Text>
+          <Pressable onPress={() => onRefresh()} disabled={refreshing}>
+            <Ionicons name="refresh" size={18} color={Colors.primary.base} />
           </Pressable>
         </View>
         {chartData.length > 0 ? (
@@ -205,19 +231,16 @@ export const DashboardScreen: React.FC = () => {
 
       <Card style={{ marginTop: Spacing.base }}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>¿Qué cuidados tienes activos?</Text>
+          <Text style={styles.cardTitle}>Orientación y cuidados</Text>
         </View>
         <Text style={styles.cardBody}>
-          Tienes {data?.activeIndications ?? 0} cuidados activos. Recuerda seguir las
+          Tienes {mockDashboard.activeIndications} cuidados activos en la demo. Recuerda seguir las
           recomendaciones de tu equipo de salud.
         </Text>
-        <Pressable
-          style={styles.medsLink}
-          onPress={() => navigation.getParent()?.navigate('Medications')}
-        >
-          <Ionicons name="medkit" size={18} color={Colors.medical.blue} />
+        <Pressable style={styles.medsLink} onPress={openMedications}>
+          <Ionicons name="medkit" size={18} color={Colors.primary.base} />
           <Text style={styles.medsLinkText}>Ver mis medicamentos</Text>
-          <Ionicons name="chevron-forward" size={16} color={Colors.medical.blue} />
+          <Ionicons name="chevron-forward" size={16} color={Colors.primary.base} />
         </Pressable>
       </Card>
     </Screen>
@@ -228,13 +251,13 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.base },
   greeting: { ...Typography.styles.h2, color: Colors.text.primary },
   subtitle: { color: Colors.text.muted },
-  logoutBtn: {
+  refreshBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background.gray,
+    backgroundColor: Colors.background.surface,
   },
   heroCard: {
     flexDirection: 'row',
@@ -244,16 +267,16 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.base,
   },
   heroTitle: {
-    color: Colors.text.white,
+    color: Colors.text.onAccent,
     fontSize: Typography.fontSize.xl,
     fontWeight: '800',
   },
-  heroSubtitle: { color: 'rgba(255,255,255,0.85)', marginTop: 2 },
+  heroSubtitle: { color: 'rgba(11,15,26,0.85)', marginTop: 2 },
   heroIconBox: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -316,11 +339,11 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     paddingTop: Spacing.xs,
     borderTopWidth: 1,
-    borderTopColor: Colors.border.light,
+    borderTopColor: Colors.border.subtle,
   },
   medsLinkText: {
     flex: 1,
-    color: Colors.medical.blue,
+    color: Colors.primary.base,
     fontWeight: '700',
   },
 });

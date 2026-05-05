@@ -69,9 +69,9 @@ export const EmotionalStateScreen: React.FC = () => {
       nextDisabled={!allAnswered}
       nextLabel="Continuar"
     >
-      <Card style={styles.intro} background="#eef2ff">
+      <Card style={styles.intro} background={Colors.accentSoft}>
         <View style={styles.introHeader}>
-          <Ionicons name="information-circle" size={20} color={Colors.medical.blue} />
+          <Ionicons name="information-circle" size={20} color={Colors.accent} />
           <Text style={styles.introTitle}>Cuéntanos cómo te has sentido</Text>
         </View>
         <Text style={styles.introText}>
@@ -106,7 +106,7 @@ export const EmotionalStateScreen: React.FC = () => {
 
       {showEmpathy ? (
         <View style={styles.empathy}>
-          <Ionicons name="heart" size={18} color="#9d174d" />
+          <Ionicons name="heart" size={18} color={Colors.raw.pink} />
           <Text style={styles.empathyText}>
             Lo que sientes importa. Compartir esto ya es un acto de cuidado. Considera
             comentarlo con tu equipo de salud para acompañarte mejor.
@@ -120,11 +120,11 @@ export const EmotionalStateScreen: React.FC = () => {
 const styles = StyleSheet.create({
   intro: { marginBottom: Spacing.base },
   introHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: Spacing.xs },
-  introTitle: { ...Typography.styles.label, color: Colors.medical.blue, flex: 1 },
+  introTitle: { ...Typography.styles.label, color: Colors.accent, flex: 1 },
   introText: { color: Colors.text.secondary, fontSize: 13, lineHeight: 18 },
   section: {
     ...Typography.styles.h4,
-    color: Colors.medical.blue,
+    color: Colors.primary.base,
     marginTop: Spacing.base,
     marginBottom: Spacing.sm,
   },
@@ -143,23 +143,23 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.border.light,
-    backgroundColor: Colors.background.white,
+    borderColor: Colors.border.subtle,
+    backgroundColor: Colors.background.surfaceHigh,
   },
   optionActive: {
-    borderColor: Colors.medical.blue,
-    backgroundColor: '#eff6ff',
+    borderColor: Colors.primary.base,
+    backgroundColor: Colors.primary.soft,
   },
   radio: {
     width: 18,
     height: 18,
     borderRadius: 9,
     borderWidth: 2,
-    borderColor: Colors.border.medium,
+    borderColor: Colors.border.strong,
   },
   radioActive: {
-    backgroundColor: Colors.medical.blue,
-    borderColor: Colors.medical.blue,
+    backgroundColor: Colors.primary.base,
+    borderColor: Colors.primary.base,
   },
   optionText: { color: Colors.text.primary, fontWeight: '500' },
   empathy: {
@@ -169,11 +169,11 @@ const styles = StyleSheet.create({
     marginTop: Spacing.base,
     padding: Spacing.base,
     borderRadius: Radius.lg,
-    backgroundColor: '#fdf2f8',
+    backgroundColor: 'rgba(255, 122, 193, 0.1)',
     borderWidth: 1,
-    borderColor: '#fbcfe8',
+    borderColor: Colors.border.strong,
   },
-  empathyText: { color: '#831843', flex: 1, fontSize: 13, lineHeight: 19 },
+  empathyText: { color: Colors.text.secondary, flex: 1, fontSize: 13, lineHeight: 19 },
 });
 
 export default EmotionalStateScreen;

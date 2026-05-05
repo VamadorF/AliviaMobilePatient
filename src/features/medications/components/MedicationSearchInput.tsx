@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import httpClient from '@/shared/services/http/apiClient';
+import { searchMedicationsCatalog } from '@/features/medications/services/medicationsCatalog';
 import { Colors } from '@/shared/theme/colors';
 import { Radius, Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
@@ -44,18 +44,16 @@ export const MedicationSearchInput: React.FC<MedicationSearchInputProps> = ({
       return;
     }
     setLoading(true);
-    debounceRef.current = setTimeout(async () => {
+    debounceRef.current = setTimeout(() => {
       const id = ++requestId.current;
       try {
-        const res = await httpClient.get(
-          `/medications/search?q=${encodeURIComponent(value.trim())}`,
-        );
+        const list = searchMedicationsCatalog(value.trim());
         if (id !== requestId.current) return;
-        setResults((res.data as MedicationCatalogItem[]) ?? []);
+        setResults(list.slice(0, 20));
       } finally {
         if (id === requestId.current) setLoading(false);
       }
-    }, 300);
+    }, 200);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -87,7 +85,7 @@ export const MedicationSearchInput: React.FC<MedicationSearchInputProps> = ({
           style={styles.input}
         />
         {loading ? (
-          <ActivityIndicator size="small" color={Colors.medical.blue} style={styles.spinner} />
+          <ActivityIndicator size="small" color={Colors.primary.base} style={styles.spinner} />
         ) : null}
       </View>
 
@@ -104,7 +102,7 @@ export const MedicationSearchInput: React.FC<MedicationSearchInputProps> = ({
                 onPress={() => handlePick(item)}
                 style={({ pressed }) => [
                   styles.itemRow,
-                  pressed && { backgroundColor: '#f1f5f9' },
+                  pressed && { backgroundColor: Colors.background.surfaceHigh },
                 ]}
               >
                 <Text style={styles.itemName}>{item.name}</Text>
@@ -137,9 +135,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: Colors.border.light,
+    borderColor: Colors.border.subtle,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surface,
     paddingHorizontal: Spacing.sm,
   },
   icon: { marginRight: 6 },
@@ -155,14 +153,14 @@ const styles = StyleSheet.create({
     top: 70,
     left: 0,
     right: 0,
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surfaceElevated,
     borderWidth: 1,
-    borderColor: Colors.border.light,
+    borderColor: Colors.border.subtle,
     borderRadius: Radius.lg,
     elevation: 8,
     shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
     zIndex: 999,
   },
@@ -170,7 +168,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
+    borderBottomColor: Colors.border.subtle,
   },
   itemName: { ...Typography.styles.label, color: Colors.text.primary },
   itemSub: { color: Colors.text.muted, fontSize: 12, marginTop: 1 },

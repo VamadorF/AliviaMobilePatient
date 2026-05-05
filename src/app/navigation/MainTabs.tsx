@@ -1,96 +1,158 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  createBottomTabNavigator,
+  type BottomTabBarProps,
+} from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { DashboardScreen } from '@/features/dashboard/screens/DashboardScreen';
-import { MedicationsScreen } from '@/features/medications/screens/MedicationsScreen';
-import { HistoryScreen } from '@/features/history/screens/HistoryScreen';
-import { ChatScreen } from '@/features/chat/screens/ChatScreen';
-import { DailyRecordStack } from './DailyRecordStack';
 import { CommunityStack } from './CommunityStack';
+import { ChatScreen } from '@/features/chat/screens/ChatScreen';
+import { ProfileStack } from './ProfileStack';
+import { DashboardStack } from './DashboardStack';
 import { Colors } from '@/shared/theme/colors';
-import type {
-  MainTabsParamList,
-  RootMainStackParamList,
-} from '@/shared/types/navigation';
+import { Typography } from '@/shared/theme/typography';
+import { Radius } from '@/shared/theme/spacing';
+import type { MainTabsParamList } from '@/shared/types/navigation';
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
-const RootStack = createNativeStackNavigator<RootMainStackParamList>();
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
-const iconForRoute: Record<keyof MainTabsParamList, IconName> = {
-  Dashboard: 'home',
-  Community: 'people',
-  DailyRecord: 'add-circle',
-  Chat: 'chatbubbles',
-  History: 'time',
-};
+interface TabConfig {
+  key: keyof MainTabsParamList;
+  label: string;
+  icon: IconName;
+  iconActive: IconName;
+}
 
-const TabsInner: React.FC = () => {
+const tabs: TabConfig[] = [
+  { key: 'Dashboard', label: 'Diario', icon: 'book-outline', iconActive: 'book' },
+  {
+    key: 'Community',
+    label: 'Comunidad',
+    icon: 'people-outline',
+    iconActive: 'people',
+  },
+  {
+    key: 'Chat',
+    label: 'AlivIA',
+    icon: 'chatbubble-ellipses-outline',
+    iconActive: 'chatbubble-ellipses',
+  },
+  { key: 'Profile', label: 'Perfil', icon: 'person-outline', iconActive: 'person' },
+];
+
+const CustomTabBar: React.FC<BottomTabBarProps> = ({
+  state,
+  descriptors,
+  navigation,
+}) => {
   const insets = useSafeAreaInsets();
-  const tabBarBaseHeight = 64;
-  const tabBarBasePaddingBottom = 8;
 
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: Colors.medical.blue,
-        tabBarInactiveTintColor: Colors.text.muted,
-        tabBarStyle: {
-          backgroundColor: Colors.background.white,
-          borderTopColor: Colors.border.light,
-          height: tabBarBaseHeight + insets.bottom,
-          paddingBottom: tabBarBasePaddingBottom + insets.bottom,
-          paddingTop: 6,
+    <View
+      style={[
+        styles.bar,
+        {
+          paddingBottom: Math.max(insets.bottom, 10),
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-        tabBarIcon: ({ color, focused }) => (
-          <Ionicons
-            name={iconForRoute[route.name as keyof MainTabsParamList]}
-            size={route.name === 'DailyRecord' ? 32 : 24}
-            color={color}
-            style={{ opacity: focused ? 1 : 0.85 }}
-          />
-        ),
-      })}
+      ]}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Inicio' }} />
-      <Tab.Screen
-        name="Community"
-        component={CommunityStack}
-        options={{ title: 'Comunidad' }}
-      />
-      <Tab.Screen
-        name="DailyRecord"
-        component={DailyRecordStack}
-        options={{ title: 'Registrar' }}
-      />
-      <Tab.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
-      <Tab.Screen name="History" component={HistoryScreen} options={{ title: 'Historial' }} />
-    </Tab.Navigator>
+      <View style={styles.barInner}>
+        {state.routes.map((route, index) => {
+          const focused = state.index === index;
+          const config = tabs.find((t) => t.key === route.name) ?? tabs[0];
+          const { options } = descriptors[route.key];
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!focused && !event.defaultPrevented) {
+              navigation.navigate(route.name as never);
+            }
+          };
+
+          return (
+            <Pressable
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={focused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              onPress={onPress}
+              style={styles.item}
+              hitSlop={6}
+            >
+              <Ionicons
+                name={focused ? config.iconActive : config.icon}
+                size={focused ? 24 : 22}
+                color={focused ? Colors.primary.base : Colors.text.muted}
+              />
+              <Text
+                style={[
+                  styles.label,
+                  { color: focused ? Colors.primary.base : Colors.text.muted },
+                ]}
+              >
+                {config.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
   );
 };
 
 export const MainTabs: React.FC = () => (
-  <RootStack.Navigator
-    screenOptions={{
-      headerStyle: { backgroundColor: Colors.background.light },
-      headerTintColor: Colors.text.primary,
-      headerShadowVisible: false,
-    }}
+  <Tab.Navigator
+    tabBar={(props) => <CustomTabBar {...props} />}
+    screenOptions={{ headerShown: false }}
   >
-    <RootStack.Screen
-      name="Tabs"
-      component={TabsInner}
-      options={{ headerShown: false }}
+    <Tab.Screen name="Dashboard" component={DashboardStack} options={{ title: 'Diario' }} />
+    <Tab.Screen
+      name="Community"
+      component={CommunityStack}
+      options={{ title: 'Comunidad' }}
     />
-    <RootStack.Screen
-      name="Medications"
-      component={MedicationsScreen}
-      options={{ title: 'Medicamentos' }}
+    <Tab.Screen name="Chat" component={ChatScreen} options={{ title: 'AlivIA' }} />
+    <Tab.Screen
+      name="Profile"
+      component={ProfileStack}
+      options={{ title: 'Perfil' }}
     />
-  </RootStack.Navigator>
+  </Tab.Navigator>
 );
+
+const styles = StyleSheet.create({
+  bar: {
+    backgroundColor: Colors.background.surface,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.border.subtle,
+    paddingTop: 8,
+    paddingHorizontal: 6,
+  },
+  barInner: {
+    flexDirection: 'row',
+    backgroundColor: 'transparent',
+    borderRadius: Radius.full,
+  },
+  item: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    gap: 2,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+    fontFamily: Typography.fontFamily.medium,
+  },
+});
+
+export default MainTabs;

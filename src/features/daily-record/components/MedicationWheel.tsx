@@ -17,10 +17,10 @@ interface MedicationWheelProps {
 }
 
 const typeColors: Record<MedicationType, [string, string]> = {
-  analgesic: ['#3b82f6', '#1e3a8a'],
-  antiinflammatory: ['#10b981', '#065f46'],
-  'muscle-relaxant': ['#8b5cf6', '#5b21b6'],
-  other: ['#64748b', '#1e293b'],
+  analgesic: Colors.gradient.sky,
+  antiinflammatory: Colors.gradient.primary,
+  'muscle-relaxant': Colors.gradient.violet,
+  other: Colors.gradient.aurora,
 };
 
 const typeLabels: Record<MedicationType, string> = {
@@ -112,12 +112,12 @@ export const MedicationWheel: React.FC<MedicationWheelProps> = ({
                       hitSlop={10}
                       style={styles.removeBtn}
                     >
-                      <Ionicons name="close" size={18} color={Colors.text.white} />
+                      <Ionicons name="close" size={18} color={Colors.text.onAccent} />
                     </Pressable>
 
                     {showAlert ? (
                       <View style={styles.alertBadge}>
-                        <Ionicons name="warning" size={12} color="#fff" />
+                        <Ionicons name="warning" size={12} color={Colors.text.onAccent} />
                         <Text style={styles.alertText}>
                           Vencida hace {time!.hoursLate}h
                         </Text>
@@ -155,7 +155,7 @@ export const MedicationWheel: React.FC<MedicationWheelProps> = ({
                               : styles.timeBoxOk,
                         ]}
                       >
-                        <Ionicons name="time-outline" size={16} color={Colors.text.white} />
+                        <Ionicons name="time-outline" size={16} color={Colors.text.onAccent} />
                         {time.overdue ? (
                           <Text style={styles.timeText}>¡Debes tomarlo ya!</Text>
                         ) : (
@@ -215,34 +215,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#dc2626',
+    backgroundColor: Colors.status.error,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 999,
     marginBottom: 6,
   },
-  alertText: { color: '#fff', fontWeight: '700', fontSize: 11 },
+  alertText: { color: Colors.text.onAccent, fontWeight: '700', fontSize: 11 },
   medName: {
-    color: Colors.text.white,
+    color: Colors.text.onAccent,
     fontSize: Typography.fontSize.lg,
     fontWeight: '700',
   },
   medSubstance: {
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(11,15,26,0.78)',
     fontSize: 12,
     fontStyle: 'italic',
     marginTop: 1,
   },
   medClinical: {
-    color: 'rgba(255,255,255,0.92)',
+    color: 'rgba(11,15,26,0.82)',
     fontSize: 12,
     marginTop: 4,
     marginBottom: 4,
   },
-  medMeta: { color: 'rgba(255,255,255,0.95)', fontSize: 14, marginTop: 2 },
-  medMetaSm: { color: 'rgba(255,255,255,0.8)', fontSize: 12 },
+  medMeta: { color: 'rgba(11,15,26,0.88)', fontSize: 14, marginTop: 2 },
+  medMetaSm: { color: 'rgba(11,15,26,0.7)', fontSize: 12 },
   lastTakenText: {
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(11,15,26,0.72)',
     fontSize: 11,
     marginTop: 4,
     fontStyle: 'italic',
@@ -259,8 +259,8 @@ const styles = StyleSheet.create({
   timeBoxOk: { backgroundColor: 'rgba(255,255,255,0.18)', borderColor: 'rgba(255,255,255,0.3)' },
   timeBoxWarn: { backgroundColor: 'rgba(245,158,11,0.3)', borderColor: 'rgba(254,215,170,1)' },
   timeBoxOverdue: { backgroundColor: 'rgba(239,68,68,0.35)', borderColor: 'rgba(252,165,165,1)' },
-  timeText: { color: Colors.text.white, fontWeight: '700' },
-  timeSub: { color: 'rgba(255,255,255,0.85)', fontSize: 11 },
+  timeText: { color: Colors.text.onAccent, fontWeight: '700' },
+  timeSub: { color: 'rgba(11,15,26,0.72)', fontSize: 11 },
   takeBtn: {
     marginTop: Spacing.sm,
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.3)',
   },
-  takeText: { color: Colors.text.white, fontWeight: '700' },
+  takeText: { color: Colors.text.onAccent, fontWeight: '700' },
 });
 
 export default MedicationWheel;

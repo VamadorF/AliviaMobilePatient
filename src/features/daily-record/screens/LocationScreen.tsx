@@ -106,16 +106,16 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 2,
-    borderColor: Colors.border.light,
+    borderColor: Colors.border.subtle,
     alignItems: 'center',
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surfaceHigh,
   },
   toggleBtnActive: {
-    backgroundColor: Colors.medical.blue,
-    borderColor: Colors.medical.blue,
+    backgroundColor: Colors.primary.base,
+    borderColor: Colors.primary.base,
   },
   toggleText: { color: Colors.text.primary, fontWeight: '600' },
-  toggleTextActive: { color: Colors.text.white },
+  toggleTextActive: { color: Colors.text.onAccent },
   usualBox: { marginTop: Spacing.lg },
   usualLabel: {
     ...Typography.styles.label,
@@ -128,16 +128,16 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.border.light,
+    borderColor: Colors.border.subtle,
     alignItems: 'center',
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surfaceHigh,
   },
   usualOptActive: {
-    backgroundColor: Colors.medical.blue,
-    borderColor: Colors.medical.blue,
+    backgroundColor: Colors.primary.base,
+    borderColor: Colors.primary.base,
   },
   usualOptText: { color: Colors.text.primary, fontWeight: '700' },
-  usualOptTextActive: { color: Colors.text.white },
+  usualOptTextActive: { color: Colors.text.onAccent },
 });
 
 export default LocationScreen;

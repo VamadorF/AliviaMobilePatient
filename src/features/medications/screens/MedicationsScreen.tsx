@@ -78,7 +78,7 @@ export const MedicationsScreen: React.FC = () => {
           <Text style={styles.subtitle}>{meds.length} registrados</Text>
         </View>
         <Pressable onPress={() => setOpen(true)} style={styles.addBtn}>
-          <Ionicons name="add" size={22} color={Colors.text.white} />
+          <Ionicons name="add" size={22} color={Colors.text.onAccent} />
         </Pressable>
       </View>
 
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalCard: {
-    backgroundColor: Colors.background.white,
+    backgroundColor: Colors.background.surfaceElevated,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: Spacing.lg,

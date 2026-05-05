@@ -1,38 +1,30 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { WizardLayout, Card } from '@/shared/components';
 import { useDailyRecordData } from '@/features/daily-record/context/DailyRecordContext';
 import { useMedicationsStore } from '@/features/medications/store/medications.store';
+import { useDailyRecordsStore } from '@/features/daily-record/store/dailyRecords.store';
 import { HealthAssistance } from '@/features/daily-record/components/HealthAssistance';
 import { CRITICAL_PAIN_THRESHOLD } from '@/app/config/constants';
-import httpClient from '@/shared/services/http/apiClient';
 import { Colors } from '@/shared/theme/colors';
+import { iaspBandForValue } from '@/shared/theme/painScale';
 import { Radius, Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
-
-const iaspBand = (val: number) => {
-  if (val <= 0) return { label: 'Sin dolor', color: '#3b82f6' };
-  if (val <= 3) return { label: 'Dolor leve', color: '#22c55e' };
-  if (val <= 6) return { label: 'Dolor moderado', color: '#f59e0b' };
-  if (val <= 9) return { label: 'Dolor severo', color: '#ef4444' };
-  return { label: 'El peor dolor imaginable', color: '#7f1d1d' };
-};
 
 export const SaveScreen: React.FC = () => {
   const navigation = useNavigation();
   const { data, resetData } = useDailyRecordData();
   const meds = useMedicationsStore((s) => s.medications);
   const takeMed = useMedicationsStore((s) => s.take);
+  const addRecord = useDailyRecordsStore((s) => s.add);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const queryClient = useQueryClient();
 
   const phq2Score = (data.phq2Answer1 ?? 0) + (data.phq2Answer2 ?? 0);
   const gad2Score = (data.gad2Answer1 ?? 0) + (data.gad2Answer2 ?? 0);
-  const band = iaspBand(data.painIntensity);
+  const band = iaspBandForValue(data.painIntensity);
   const isCritical = data.painIntensity >= CRITICAL_PAIN_THRESHOLD;
   const moodPattern: 'positive' | 'neutral' | 'negative' =
     phq2Score >= 4 ? 'negative' : data.painIntensity <= 3 ? 'positive' : 'neutral';
@@ -47,16 +39,18 @@ export const SaveScreen: React.FC = () => {
             ? [{ id: data.medicationId, relief: data.medicationRelief ?? 0 }]
             : [];
 
-      await httpClient.post('/patient/daily-records', {
-        painAreas: [
-          ...(data.primaryPainArea ? [data.primaryPainArea] : []),
-          ...data.secondaryPainAreas,
-        ],
-        primaryPainArea: data.primaryPainArea,
-        secondaryPainAreas: data.secondaryPainAreas,
+      const painAreas = [
+        ...(data.primaryPainArea ? [data.primaryPainArea] : []),
+        ...data.secondaryPainAreas,
+      ];
+      const recNote = data.recommendation
+        ? `Recomendación (${data.recommendation.category}): ${data.recommendation.message}`
+        : undefined;
+
+      await addRecord({
         painIntensity: data.painIntensity,
+        painAreas,
         painTypes: data.painQualities,
-        painQualityOther: data.painQualityOther,
         painDurationUnit: data.durationUnit,
         painDurationValue: data.durationValue,
         functionalImpactPhysical: data.functionalImpactPhysical,
@@ -67,16 +61,18 @@ export const SaveScreen: React.FC = () => {
         phq2Answer2: data.phq2Answer2,
         gad2Answer1: data.gad2Answer1,
         gad2Answer2: data.gad2Answer2,
-        tookMedication: takenMedications.length > 0,
         takenMedications,
-        recommendation: data.recommendation,
+        notes: [recNote, data.painQualityOther ? `Otra cualidad: ${data.painQualityOther}` : '']
+          .filter(Boolean)
+          .join('\n') || undefined,
+        activities: [],
+        symptoms: [],
+        triggers: [],
       });
 
       await Promise.all(takenMedications.map((tm) => takeMed(tm.id)));
 
       setSaved(true);
-      queryClient.invalidateQueries({ queryKey: ['patient-daily-records'] });
-      queryClient.invalidateQueries({ queryKey: ['patient-dashboard'] });
     } finally {
       setSaving(false);
     }
@@ -84,7 +80,7 @@ export const SaveScreen: React.FC = () => {
 
   const handleFinish = () => {
     resetData();
-    navigation.getParent()?.navigate('Dashboard' as never);
+    navigation.getParent()?.getParent()?.goBack();
   };
 
   return (
@@ -112,7 +108,7 @@ export const SaveScreen: React.FC = () => {
         </View>
         {phq2Score >= 3 ? (
           <View style={styles.profileRow}>
-            <Ionicons name="heart" size={18} color="#9d174d" />
+            <Ionicons name="heart" size={18} color={Colors.raw.pink} />
             <Text style={styles.profileText}>
               Estado de ánimo: <Text style={styles.profileAttention}>puede requerir atención</Text>
             </Text>
@@ -120,7 +116,7 @@ export const SaveScreen: React.FC = () => {
         ) : null}
         {gad2Score >= 3 ? (
           <View style={styles.profileRow}>
-            <Ionicons name="alert-circle" size={18} color="#9d174d" />
+            <Ionicons name="alert-circle" size={18} color={Colors.raw.pink} />
             <Text style={styles.profileText}>
               Ansiedad: <Text style={styles.profileAttention}>puede requerir atención</Text>
             </Text>
@@ -166,9 +162,9 @@ export const SaveScreen: React.FC = () => {
       </Card>
 
       {isCritical ? (
-        <Card background="#fee2e2" style={styles.criticalCard}>
+        <Card background="rgba(255, 100, 121, 0.12)" style={styles.criticalCard}>
           <View style={styles.savedRow}>
-            <Ionicons name="alert-circle" size={24} color="#b91c1c" />
+            <Ionicons name="alert-circle" size={24} color={Colors.status.error} />
             <Text style={styles.criticalTitle}>Mitigación pasiva activada</Text>
           </View>
           <Text style={styles.criticalText}>
@@ -182,9 +178,9 @@ export const SaveScreen: React.FC = () => {
       ) : null}
 
       {saved ? (
-        <Card background="#ecfdf5">
+        <Card background={Colors.primary.soft}>
           <View style={styles.savedRow}>
-            <Ionicons name="checkmark-circle" size={28} color={Colors.medical.green} />
+            <Ionicons name="checkmark-circle" size={28} color={Colors.primary.base} />
             <Text style={styles.savedText}>¡Registro guardado!</Text>
           </View>
           <Text style={styles.savedHint}>
@@ -222,7 +218,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   profileText: { color: Colors.text.primary, fontSize: 14, flex: 1 },
-  profileAttention: { color: '#9d174d', fontWeight: '700' },
+  profileAttention: { color: Colors.raw.pink, fontWeight: '700' },
   profileHint: {
     marginTop: Spacing.xs,
     color: Colors.text.muted,
@@ -251,15 +247,15 @@ const styles = StyleSheet.create({
   savedRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   savedText: {
     ...Typography.styles.h4,
-    color: Colors.medical.green,
+    color: Colors.primary.base,
   },
   savedHint: { color: Colors.text.muted, marginTop: 4 },
   criticalCard: { marginBottom: Spacing.base },
   criticalTitle: {
     ...Typography.styles.h4,
-    color: '#7f1d1d',
+    color: Colors.status.error,
   },
-  criticalText: { color: '#7f1d1d', marginTop: 4, fontSize: 13 },
+  criticalText: { color: Colors.text.secondary, marginTop: 4, fontSize: 13 },
 });
 
 export default SaveScreen;

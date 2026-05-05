@@ -1,205 +1,90 @@
-import React, { useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import React from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button, Card, EmptyState, Screen } from '@/shared/components';
-import httpClient from '@/shared/services/http/apiClient';
-import { voiceProvider } from '@/shared/services/webrtc/voiceProvider';
+import { useVoiceSpacesStore } from '@/features/voice-spaces/store/voiceSpaces.store';
+import type { CommunityStackParamList } from '@/shared/types/navigation';
 import type { VoiceSpace } from '@/shared/types/domain';
 import { Colors } from '@/shared/theme/colors';
 import { Radius, Spacing } from '@/shared/theme/spacing';
 import { Typography } from '@/shared/theme/typography';
 
-interface ActiveSession {
-  spaceId: string;
-  channelName: string;
-  provider: 'agora' | 'livekit';
-  muted: boolean;
-}
-
 export const VoiceSpacesScreen: React.FC = () => {
-  const [active, setActive] = useState<ActiveSession | null>(null);
+  const navigation =
+    useNavigation<NativeStackNavigationProp<CommunityStackParamList>>();
+  const spaces = useVoiceSpacesStore((s) => s.spaces);
 
-  const { data, isLoading, refetch } = useQuery<VoiceSpace[]>({
-    queryKey: ['voice-spaces'],
-    queryFn: async () => {
-      const res = await httpClient.get('/voice-spaces');
-      return res.data;
-    },
-  });
-
-  const joinMutation = useMutation({
-    mutationFn: async (space: VoiceSpace) => {
-      const res = await httpClient.post(`/voice-spaces/${space.id}/join`, {});
-      const token = res.data?.token as string | undefined;
-      const provider = (res.data?.provider ?? space.provider) as
-        | 'agora'
-        | 'livekit';
-      await voiceProvider.join({
-        channelName: space.channelName,
-        displayName: 'Tú',
-        token,
-      });
-      return { space, token, provider };
-    },
-    onSuccess: ({ space, provider }) => {
-      setActive({
-        spaceId: space.id,
-        channelName: space.channelName,
-        provider,
-        muted: false,
-      });
-    },
-  });
-
-  const leaveMutation = useMutation({
-    mutationFn: async () => {
-      await voiceProvider.leave();
-    },
-    onSuccess: () => {
-      setActive(null);
-    },
-  });
-
-  const handleToggleMute = async () => {
-    if (!active) return;
-    const muted = await voiceProvider.toggleMute();
-    setActive({ ...active, muted });
-  };
-
-  const renderItem = (space: VoiceSpace) => {
-    const isActive = active?.spaceId === space.id;
-    return (
-      <Card key={space.id} style={{ marginBottom: Spacing.sm }}>
-        <View style={styles.headerRow}>
-          <View style={styles.iconBox}>
-            <Ionicons name="mic" size={18} color={Colors.text.white} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.title}>{space.title}</Text>
-            <Text style={styles.host}>Anfitrión: {space.hostName}</Text>
-          </View>
-          {space.isLive ? (
-            <View style={styles.liveBadge}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveText}>EN VIVO</Text>
-            </View>
-          ) : null}
+  const renderItem = (space: VoiceSpace) => (
+    <Card key={space.id} style={{ marginBottom: Spacing.sm }}>
+      <View style={styles.headerRow}>
+        <View style={styles.iconBox}>
+          <Ionicons name="mic" size={18} color={Colors.text.onAccent} />
         </View>
-        <Text style={styles.body}>{space.description}</Text>
-        <View style={styles.metaRow}>
-          <Ionicons name="people" size={14} color={Colors.text.muted} />
-          <Text style={styles.meta}>
-            {space.participants} participantes
-          </Text>
-          <Ionicons
-            name="cloud-outline"
-            size={14}
-            color={Colors.text.muted}
-            style={{ marginLeft: 8 }}
-          />
-          <Text style={styles.meta}>{space.provider}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>{space.title}</Text>
+          <Text style={styles.host}>Anfitrión: {space.hostName}</Text>
         </View>
-        {space.scheduledFor ? (
-          <Text style={styles.scheduled}>
-            Programado:{' '}
-            {format(parseISO(space.scheduledFor), "EEEE d 'a las' HH:mm", {
-              locale: es,
-            })}
-          </Text>
+        {space.isLive ? (
+          <View style={styles.liveBadge}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>EN VIVO</Text>
+          </View>
         ) : null}
+      </View>
+      <Text style={styles.body}>{space.description}</Text>
+      <View style={styles.metaRow}>
+        <Ionicons name="people" size={14} color={Colors.text.muted} />
+        <Text style={styles.meta}>{space.participants} participantes</Text>
+      </View>
+      {space.scheduledFor ? (
+        <Text style={styles.scheduled}>
+          Programado:{' '}
+          {format(parseISO(space.scheduledFor), "EEEE d 'a las' HH:mm", {
+            locale: es,
+          })}
+        </Text>
+      ) : null}
 
-        <View style={styles.actions}>
-          {isActive ? (
-            <>
-              <Button
-                label={active?.muted ? 'Activar mic' : 'Silenciar'}
-                variant="outline"
-                size="sm"
-                leftIcon={
-                  <Ionicons
-                    name={active?.muted ? 'mic-off' : 'mic'}
-                    size={16}
-                    color={Colors.medical.blue}
-                  />
-                }
-                onPress={handleToggleMute}
-              />
-              <Button
-                label="Salir"
-                variant="danger"
-                size="sm"
-                leftIcon={
-                  <Ionicons
-                    name="exit-outline"
-                    size={16}
-                    color={Colors.text.white}
-                  />
-                }
-                loading={leaveMutation.isPending}
-                onPress={() => leaveMutation.mutate()}
-              />
-            </>
-          ) : (
-            <Button
-              label={space.isLive ? 'Entrar a la sala' : 'Recordarme'}
-              size="sm"
-              leftIcon={
-                <Ionicons
-                  name={space.isLive ? 'enter-outline' : 'notifications'}
-                  size={16}
-                  color={Colors.text.white}
-                />
-              }
-              loading={joinMutation.isPending}
-              onPress={() => {
-                if (space.isLive) {
-                  joinMutation.mutate(space);
-                }
-              }}
-              disabled={!space.isLive}
+      <View style={styles.actions}>
+        <Button
+          label={space.isLive ? 'Entrar a la sala' : 'Próximamente'}
+          size="sm"
+          disabled={!space.isLive}
+          leftIcon={
+            <Ionicons
+              name={space.isLive ? 'enter-outline' : 'time-outline'}
+              size={16}
+              color={Colors.text.onAccent}
             />
-          )}
-        </View>
-      </Card>
-    );
-  };
+          }
+          onPress={() => {
+            if (space.isLive) {
+              navigation.navigate('VoiceSession', { spaceId: space.id });
+            }
+          }}
+        />
+      </View>
+    </Card>
+  );
 
   return (
     <Screen scroll edges={['top', 'left', 'right']}>
       <View style={styles.heading}>
         <Text style={styles.heading1}>Espacios de voz</Text>
-        <Pressable onPress={() => refetch()} hitSlop={8}>
-          <Ionicons name="refresh" size={20} color={Colors.medical.blue} />
+        <Pressable hitSlop={8}>
+          <Ionicons name="information-circle-outline" size={22} color={Colors.primary.base} />
         </Pressable>
       </View>
       <Text style={styles.subtitle}>
-        Salas en vivo facilitadas por tu equipo médico y la comunidad.
+        Salas demo sin conexión real: simulamos participantes y el canal solo para la
+        experiencia visual.
       </Text>
 
-      {active ? (
-        <Card background="#dcfce7" style={{ marginBottom: Spacing.base }}>
-          <View style={styles.activeRow}>
-            <Ionicons name="radio" size={20} color="#047857" />
-            <Text style={styles.activeText}>
-              Estás conectado · canal {active.channelName} · proveedor{' '}
-              {active.provider}
-            </Text>
-          </View>
-        </Card>
-      ) : null}
-
-      {isLoading ? (
-        <ActivityIndicator color={Colors.medical.blue} />
-      ) : (data ?? []).length === 0 ? (
+      {spaces.length === 0 ? (
         <Card>
           <EmptyState
             title="Aún no hay espacios"
@@ -207,7 +92,7 @@ export const VoiceSpacesScreen: React.FC = () => {
           />
         </Card>
       ) : (
-        (data ?? []).map(renderItem)
+        spaces.map(renderItem)
       )}
     </Screen>
   );
@@ -231,11 +116,11 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.medical.purple,
+    backgroundColor: Colors.primary.soft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: { ...Typography.styles.h4, color: Colors.text.primary },
+  cardTitle: { ...Typography.styles.h4, color: Colors.text.primary },
   host: { color: Colors.text.muted, fontSize: 12 },
   body: { color: Colors.text.secondary, fontSize: 14 },
   metaRow: {
@@ -260,7 +145,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#fee2e2',
+    backgroundColor: Colors.status.error + '22',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: Radius.lg,
@@ -269,11 +154,9 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#dc2626',
+    backgroundColor: Colors.status.error,
   },
-  liveText: { color: '#b91c1c', fontWeight: '800', fontSize: 11 },
-  activeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  activeText: { color: '#065f46', flex: 1, fontWeight: '600' },
+  liveText: { color: Colors.status.error, fontWeight: '800', fontSize: 11 },
 });
 
 export default VoiceSpacesScreen;

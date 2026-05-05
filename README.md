@@ -1,136 +1,91 @@
 # Alivia Mobile
 
-App móvil de Alivia construida con **Expo SDK 54 + React Native 0.81 + TypeScript**, basada en la plantilla `ejoi`. Es el equivalente móvil del frontend Next.js `phonealivia`: conserva el dashboard, el registro diario en 9 pasos, el control de medicamentos y el historial de dolor con gráficos.
+App móvil de **Alivia** — apoyo para personas con dolor crónico — construida
+con **Expo SDK 54 + React Native 0.81 + TypeScript**.
 
-Funciona **sin backend real**: incluye una capa de mock con `AsyncStorage` para persistir registros y medicamentos, y `expo-secure-store` para el token de sesión.
+> Esta versión del repositorio es **frontend-only**: no contiene capa HTTP ni
+> dependencias de backend. Sirve como demo visualizable y showcase del diseño.
+> El backend real vivirá en un repositorio aparte y se integrará más adelante.
 
 ---
+
+## Funciona sin backend
+
+Toda la información (dashboard, historial, comunidad, chat AlivIA IA,
+medicamentos, espacios de voz) se mantiene en **stores Zustand** con
+persistencia local (`AsyncStorage`). No se hace ninguna petición de red.
 
 ## Requisitos previos
 
 - **Node.js 20.x** o superior
-- **npm 10.x** o superior (o yarn / pnpm)
-- **Android Studio** con un emulador configurado o un dispositivo Android conectado por USB con depuración habilitada
-- **Java JDK 17** (lo usa Android)
-- (opcional) Xcode 15+ para iOS
-
-> Si nunca has corrido `expo run:android`, sigue la guía oficial: [Set up your environment](https://docs.expo.dev/get-started/set-up-your-environment/).
-
----
+- **npm 10.x** o superior
+- (Android nativo) **Android Studio** + **JDK 17**
+- (iOS nativo) **Xcode 15+**
 
 ## Instalación
-
-Desde la carpeta `alivia-mobile`:
 
 ```bash
 npm install
 ```
 
----
+## Ejecutar
 
-## Ejecutar en Android
+| Plataforma | Comando                          |
+| ---------- | -------------------------------- |
+| Web (demo) | `npx expo start --web`           |
+| Android    | `npx expo run:android`           |
+| iOS        | `npx expo run:ios`               |
 
-```bash
-npx expo run:android
-```
-
-La primera vez compila la app nativa (puede tardar varios minutos). Luego:
-
-- Para volver a abrir el dev server: `npx expo start`
-- Para forzar limpieza de caché: `npx expo start -c`
-
----
-
-## Variables de entorno
-
-Copia `.env.example` a `.env` o `.env.local` si quieres cambiar la configuración:
-
-```bash
-EXPO_PUBLIC_API_URL=http://10.0.2.2:3001/api   # IP del emulador Android hacia tu host
-EXPO_PUBLIC_USE_MOCK=true                       # true => usa apiMock; false => axios real
-```
-
-> En modo **mock** (por defecto) la app funciona sin backend.
-
----
+> En modo web la app bundle-a en la primera petición; la primera carga puede
+> tomar 10–20 s.
 
 ## Estructura
 
 ```
 src/
 ├─ app/
-│  ├─ index.tsx                ← root del componente App
-│  ├─ navigation/              ← Stack/Tabs (RootNavigator, AuthNavigator, MainTabs, DailyRecordStack)
-│  ├─ providers/               ← ThemeProvider, QueryProvider, AuthProvider
-│  └─ config/                  ← env y constants (storage keys, etc.)
+│  ├─ index.tsx            ← root del componente App
+│  ├─ navigation/          ← Stack/Tabs (RootNavigator, MainTabs, etc.)
+│  ├─ providers/           ← ThemeProvider, QueryProvider, AuthProvider
+│  └─ config/              ← constants (storage keys)
 ├─ features/
-│  ├─ auth/                    ← Login/Register, store y servicio
-│  ├─ dashboard/               ← Pantalla principal con stats + gráfico
-│  ├─ daily-record/            ← Wizard de 9 pasos + componentes (BodyMap, FacesPainScale,
-│  │                              MedicationWheel, HealthAssistance) + DailyRecordContext
-│  ├─ medications/             ← CRUD de medicamentos con AsyncStorage
-│  └─ history/                 ← Listado, gráfico y filtros (7d, 30d, todos)
+│  ├─ auth/                ← Login/Register + store + servicio mock
+│  ├─ dashboard/           ← Pantalla de inicio "Diario"
+│  ├─ daily-record/        ← Wizard de 9 pasos + store de registros
+│  ├─ medications/         ← CRUD de medicamentos
+│  ├─ history/             ← Historial con gráficos
+│  ├─ community/           ← Comunidad + posts
+│  ├─ voice-spaces/        ← Salas de voz (UI mockeada)
+│  ├─ chat/                ← Chat AlivIA IA / Equipo médico
+│  └─ profile/             ← Perfil de usuario, medallas, settings
 └─ shared/
-   ├─ components/              ← Button, Input, Screen, Card, ProgressBar, EmptyState,
-   │                              WizardLayout, OptionPill, PainChart
+   ├─ components/          ← Button, Input, Screen, Card, ...
    ├─ services/
-   │  ├─ http/                 ← apiClient (axios | mock)
-   │  └─ storage/              ← secureStore + asyncStorage helpers
-   ├─ theme/                   ← colors, typography, spacing, radius, shadow
-   └─ types/                   ← navigation.ts y domain.ts
+   │  ├─ demo/             ← Datos mock (catálogo, comunidades, etc.)
+   │  └─ storage/          ← AsyncStorage + SecureStore helpers
+   ├─ theme/               ← colors, typography, spacing, radius, shadow
+   └─ types/               ← navigation.ts y domain.ts
 ```
 
----
+## Tech stack
 
-## Funcionalidades portadas desde Next.js
+- Navigation · `@react-navigation/native`, native-stack, bottom-tabs
+- State · `zustand` (auth, medications, dailyRecords, community, chat, voice)
+- Forms · `react-hook-form` + `zod`
+- UI · `react-native-svg`, `expo-linear-gradient`, `@expo/vector-icons`
+- Persistencia · `expo-secure-store` (token) + `@react-native-async-storage/async-storage`
+- Animaciones · `react-native-reanimated` 4
+- Fechas · `date-fns` (locale español)
 
-- Autenticación con email + contraseña (mock). Si el email contiene `doctor`, `health` o `profesional`, inicia sesión como profesional.
-- Dashboard con saludo, KPI cards (dolor promedio, días buenos/malos, adherencia), CTA grande para registrar dolor y gráfico de evolución de 7 días.
-- Wizard de **registro diario** (9 pasos) con barra de progreso:
-  1. **Ubicación** del dolor con BodyMap SVG (vista frontal y posterior)
-  2. **Intensidad** con escala de caras (FPS-R) + slider fino 1-10
-  3. **Cualidad** del dolor (chips multi-selección + texto libre)
-  4. **Duración** (cantidad + unidad + frecuencia semanal)
-  5. **Impacto funcional** (físico, trabajo, social) en escalas 0-10
-  6. **Estado emocional** PHQ-2 + GAD-2
-  7. **Medicación** tomada + nivel de alivio
-  8. **Recomendación** automática (autocuidado / CESFAM-CCR / SAPU-SAR / urgencia) con HealthAssistance
-  9. **Resumen y guardado** en AsyncStorage
-- **Medicamentos**: CRUD con tipo (analgésico, antiinflamatorio, relajante, otro), dosis, frecuencia y próxima dosis calculada automáticamente.
-- **Historial**: filtros 7d/30d/todos, gráfico (líneas o barras), tarjetas con intensidad y áreas.
-- Integración con **React Query** para invalidar y refrescar datos al guardar registros.
+## Tema
 
----
+La app usa un **dark mode profundo** (fondo casi negro con matiz azul) y un
+acento verde menta eléctrico para acciones primarias, complementado por
+violeta, coral, oro y celeste para enriquecer cada sección. Definido en
+`src/shared/theme/colors.ts`.
 
-## Tecnologías
+## Demo / login
 
-- **Navigation**: `@react-navigation/native`, `native-stack`, `bottom-tabs`
-- **Estado**: `zustand` (auth, medications), `useReducer` (DailyRecordContext)
-- **Datos**: `@tanstack/react-query`
-- **Formularios**: `react-hook-form` + `zod` + `@hookform/resolvers`
-- **UI**: `react-native-svg`, `expo-linear-gradient`, `@expo/vector-icons` (Ionicons + MaterialIcons)
-- **Persistencia**: `expo-secure-store` (token) + `@react-native-async-storage/async-storage` (registros, medicamentos, usuario)
-- **HTTP**: `axios` (modo real) | `apiMock.ts` (modo mock)
-- **Animaciones**: `react-native-reanimated` 4 + `react-native-worklets` (configurado en `babel.config.js`)
-- **Fechas**: `date-fns` (con locale español)
-
----
-
-## Scripts disponibles
-
-| Script              | Descripción                                  |
-| ------------------- | -------------------------------------------- |
-| `npm start`         | Inicia el dev server de Expo                 |
-| `npm run android`   | `expo run:android` (compila y abre Android)  |
-| `npm run ios`       | `expo run:ios` (requiere Xcode)              |
-| `npm run web`       | Modo web                                     |
-| `npm run lint`      | Linter de Expo                               |
-
----
-
-## Notas
-
-- El BodyMap está construido con `react-native-svg` (silueta + áreas pulsables superpuestas). 24 zonas anatómicas en cada vista.
-- El gráfico (`PainChart`) está implementado en SVG puro para evitar la dependencia adicional de Skia. Soporta líneas y barras.
-- El `apiMock` simula latencia de red (~300-400 ms) y persiste los registros del wizard en AsyncStorage para que aparezcan en el historial al instante.
-- Para cambiar a un backend real, basta con poner `EXPO_PUBLIC_USE_MOCK=false` y apuntar `EXPO_PUBLIC_API_URL` a tu API.
+En la pantalla de login puedes usar **cualquier email y contraseña**: la app
+te dejará entrar como paciente. Si tu email contiene `doctor`,
+`profesional` o `health`, entras como profesional.

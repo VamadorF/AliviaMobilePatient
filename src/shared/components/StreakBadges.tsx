@@ -27,35 +27,35 @@ interface MedalDef {
 const medals: MedalDef[] = [
   {
     id: 'first-step',
-    label: 'Primer paso',
+    label: 'Primer Paso',
     description: 'Tu primer registro',
     threshold: 1,
     icon: 'footsteps',
-    colors: ['#fbbf24', '#d97706'],
+    colors: Colors.gradient.gold,
   },
   {
     id: 'week-strong',
-    label: 'Semana fuerte',
+    label: 'Semana Fuerte',
     description: '7 días seguidos',
     threshold: 7,
     icon: 'flame',
-    colors: ['#fb7185', '#b91c1c'],
+    colors: Colors.gradient.coral,
   },
   {
     id: 'commitment',
-    label: 'Compromiso',
+    label: 'Quincena Imparable',
     description: '14 días seguidos',
     threshold: 14,
     icon: 'shield-checkmark',
-    colors: ['#34d399', '#047857'],
+    colors: Colors.gradient.primary,
   },
   {
     id: 'master',
-    label: 'Maestría',
+    label: 'Mes de Oro',
     description: '30 días seguidos',
     threshold: 30,
     icon: 'trophy',
-    colors: ['#a78bfa', '#5b21b6'],
+    colors: Colors.gradient.violet,
   },
 ];
 
@@ -69,7 +69,7 @@ export const StreakBadges: React.FC<Props> = ({ streak }) => {
   return (
     <View style={styles.wrapper}>
       <LinearGradient
-        colors={['#fb923c', '#f97316']}
+        colors={Colors.gradient.streak}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.streakCard}
@@ -97,26 +97,18 @@ export const StreakBadges: React.FC<Props> = ({ streak }) => {
             <View key={m.id} style={styles.medalWrap}>
               <LinearGradient
                 colors={
-                  earned
-                    ? m.colors
-                    : ['#e5e7eb', '#d1d5db']
+                  earned ? m.colors : [Colors.background.surfaceHigh, Colors.background.surface]
                 }
-                style={[
-                  styles.medalCircle,
-                  !earned && styles.medalCircleLocked,
-                ]}
+                style={[styles.medalCircle, !earned && styles.medalCircleLocked]}
               >
                 <Ionicons
                   name={m.icon}
                   size={22}
-                  color={earned ? Colors.text.white : '#9ca3af'}
+                  color={earned ? Colors.text.white : Colors.text.light}
                 />
               </LinearGradient>
               <Text
-                style={[
-                  styles.medalLabel,
-                  !earned && { color: Colors.text.muted },
-                ]}
+                style={[styles.medalLabel, !earned && { color: Colors.text.muted }]}
                 numberOfLines={1}
               >
                 {m.label}
@@ -148,12 +140,12 @@ const styles = StyleSheet.create({
   },
   streakValue: {
     color: Colors.text.white,
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '800',
-    lineHeight: 30,
+    lineHeight: 32,
   },
   streakLabel: {
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(255,255,255,0.92)',
     fontSize: 13,
   },
   streakRight: { alignItems: 'flex-end' },
@@ -179,14 +171,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   medalCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  medalCircleLocked: { opacity: 0.7 },
+  medalCircleLocked: { opacity: 0.65 },
   medalLabel: {
     fontSize: 11,
     fontWeight: '700',
